@@ -1,0 +1,16 @@
+.solution-document { overflow-wrap: anywhere; }
+.solution-document table { width: 100%; border-collapse: collapse; }
+.solution-document :is(th,td) { border: 1px solid var(--line); padding: .55em; text-align: left; vertical-align: top; }
+.solution-document th { background: var(--soft); }
+.solution-document pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.solution-document h2 { margin-top: 1.25em; }
+@media (max-width: 650px) {
+  .solution-document table { display: block; overflow-x: auto; }
+}
+@media print {
+  .shell { padding: 0; }
+  .route-heading a { display: none; }
+  .solution-document { border: 0; padding: 0; box-shadow: none; }
+  .solution-document tr { break-inside: avoid; }
+  .tech-card + .tech-card { break-before: page; }
+}

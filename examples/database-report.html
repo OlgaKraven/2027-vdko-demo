@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Отчёт о настройке PostgreSQL и Windows · ДЭ 2027</title>
+<link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="../prog.css"><link rel="stylesheet" href="solution.css">
+<main class="shell"><header class="route-heading"><p><a href="../index.html?mode=examples">← К готовому решению</a></p><h1>Отчёт о настройке PostgreSQL и Windows</h1></header>
+<article class="route-panel solution-document">
+<p>Образец для места 07. Параметры Windows и подтверждения берите со своего стенда.</p>
+<h2>Установка и совместимость</h2>
+<p>PostgreSQL 16, изолированная ВМ, локальное подключение 127.0.0.1:5432. В конфигурации экземпляра задайте <code>cluster_name = 'lab_sql_07'</code> и перезапустите службу. В отчёт перенесите фактическое имя службы, путь установки и каталог данных. Проверьте свободный порт перед установкой, запущенную службу и версию через <code>SELECT version()</code>. Название подключения в DBeaver задайте <code>lab_sql_07</code>.</p>
+<h2>База, роли и экспорт</h2>
+<p>Из каталога примеров выполните <code>psql -X -U postgres -d postgres -v seat=07 -f setup.sql</code> на чистом учебном сервере. Задайте пароли пяти ролям командой <code>\password</code> в psql. В DBeaver создайте отдельные подключения с этими логинами. Запрос <code>SELECT current_user, current_database();</code> подтверждает контекст.</p>
+<table><thead><tr><th>Роль</th><th>Разрешено</th><th>Контрольная операция, ожидается отказ</th></tr></thead><tbody>
+<tr><td>client01</td><td>SELECT, INSERT</td><td>UPDATE</td></tr><tr><td>client02</td><td>SELECT, INSERT</td><td>DELETE</td></tr>
+<tr><td>client03</td><td>SELECT</td><td>INSERT</td></tr><tr><td>client04</td><td>SELECT, UPDATE</td><td>DELETE</td></tr>
+<tr><td>client05</td><td>SELECT, DELETE</td><td>UPDATE</td></tr></tbody></table>
+<p>Проверяйте операции на тестовой строке в транзакции. После каждого опыта выполните <code>ROLLBACK;</code>. Проверьте права скриптом <a href="verify.sql">verify.sql</a>. Экспортируйте структуру и строки: <code>pg_dump -U postgres --no-owner --no-privileges -t public.clients -f clients.sql corpdata_07</code>. Приложите файл и его первые 10 строк или содержание целиком. <a href="clients.sql">Скачать проверенный пример выгрузки</a>.</p>
+<h2>Учётные записи и права Windows</h2>
+<ol><li>Создайте локальную учётную запись <code>dbadmin_07</code> и рабочий каталог <code>C:\DBAdmin_07</code>. Дайте этой учётной записи права на её рабочую папку.</li>
+<li>Войдите под <code>dbadmin_07</code>. Через переменные среды для пользователя задайте <code>DB_HOME</code> со значением пути установки PostgreSQL. В новом окне PowerShell проверьте <code>$env:DB_HOME</code>.</li>
+<li>Для доступа к папке нужна отдельная учётная запись Windows <code>client03</code>. Создайте её на стенде без включения в группу администраторов. Создайте <code>sql_reports_07</code> на рабочем столе по условию и проверьте, что проверяющий пользователь может пройти к папке. В дополнительных параметрах безопасности отключите наследование, оставьте SYSTEM и «Администраторы» с полным доступом, добавьте <code>client03</code> право «Чтение и выполнение», удалите широкие записи с правом изменения.</li>
+<li>Сохраните вывод <code>icacls</code> для папки. Под <code>client03</code> откройте тестовый файл, затем проверьте отказ при создании нового файла. Сделайте снимок ВМ после настройки.</li></ol>
+<h2>Доказательства для сдачи</h2>
+<p>Включите снимки установки, создания таблицы, матрицы прав и подключения из DBeaver. Отдельно приложите ACL, подтверждение снимка ВМ, вывод проверки зависимостей, служб и порта. Если порт занят, определите процесс-владелец и укажите согласованный порт в отчёте и настройках клиента.</p>
+<p><a href="https://www.postgresql.org/docs/16/sql-grant.html">PostgreSQL · GRANT</a> · <a href="https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/icacls">Microsoft · icacls</a></p></article></main></html>
