@@ -36,6 +36,41 @@ let {mode,stage,variant,learningView} = readRoute(true);
 let dark = get('dark',false);
 const btn=(text,attrs='',primary=false)=>`<button class="btn${primary?' primary':''}" ${attrs}>${text}</button>`;
 const link=(text,path)=>`<a class="btn" href="${E(path)}" target="_blank" rel="noopener">${E(text)}</a>`;
+const baseVariant = D.variants[0];
+const selectedVariant = () => D.variants.find(item => item.id === variant);
+
+function ticketsDownload(entry) {
+  const rows = [TICKET_COLUMNS, ...entry.tickets];
+  const csv = rows.map(row => row.map(cell => '"' + cell.replaceAll('"', '""') + '"').join(',')).join('\r\n');
+  const url = 'data:text/csv;charset=utf-8,' + encodeURIComponent('\uFEFF' + csv + '\r\n');
+  return `<a class="btn" href="${url}" download="tickets-${E(entry.id)}.csv">Исходные заявки · CSV</a>`;
+}
+
+function taskCondition(task) {
+  return task.condition.map(([title, requirements]) =>
+    `<section><h4>${E(title)}</h4><ul>${requirements.map(text => '<li>' + E(text) + '</li>').join('')}</ul></section>`
+  ).join('');
+}
+
+function taskInputs(task, entry) {
+  if (task.id === 'M1') {
+    return `<details><summary>Показать 10 исходных заявок</summary>
+      <ol>${entry.tickets.map(([number, source, contact, request]) =>
+        `<li><strong>№ ${E(number)}</strong> · ${E(source)} · ${E(contact)}<br>${E(request)}</li>`
+      ).join('')}</ol>${ticketsDownload(entry)}</details>`;
+  }
+  return `<p>${E(task.inputs)}</p>`;
+}
+
+function fullCondition(entry) {
+  return D.tasks.map((task, index) =>
+    `<section><h3>Задание ${index + 1}. ${E(task.title)}</h3>
+      ${taskCondition(task)}
+      <h4>Исходные данные</h4>${taskInputs(task, entry)}
+      ${link('Страницы задания в КИМ', D.kim + '#page=' + task.page)}
+    </section>`
+  ).join('');
+}
 const current=()=>D.stages.find(s=>s.id===stage),scope=()=>mode+':'+(mode==='mock'?variant:'sample'),timer=()=>C.restoreTimer(JSON.stringify(get('timer:'+scope())),180*60,mode);
 const header = (title, text) => `<div class="route-heading"><h1 tabindex="-1">${E(title)}</h1>${text?'<p>'+E(text)+'</p>':''}</div>`;
 function iconButton(title, path, attributes) {
@@ -139,7 +174,7 @@ function lessonBrief(lesson) {
   const task = D.tasks.find(entry => entry.id === lesson.id);
   const documents = D.originals.map(file => link(file.name,file.path)).join('');
   return `<div class="lesson-brief">
-    ${task ? conditionParagraphs(task.text) : '<p>'+E(preparation)+'</p>'}
+    ${task ? '<h3>Условие задания</h3>' + taskCondition(task) + '<h3>Исходные данные</h3>' + taskInputs(task, baseVariant) : '<p>'+E(preparation)+'</p>'}
     ${stageResult(lesson)}
     <div class="button-row">${task ? link('Полное условие · КИМ',D.kim+'#page='+task.page) : documents}</div>
     ${btn(get('step:'+lesson.id)===null?'Перейти к шагам →':stepIndex(lesson)===lesson.steps.length?'Что сохранить →':'Продолжить с шага '+(stepIndex(lesson)+1)+' →','data-lesson-view="steps"',true)}
@@ -160,6 +195,7 @@ function explain(step) {
     <h3>Как это понять</h3><p>${E(step.why)}</p>
     <h3>Что сделать самостоятельно</h3><ol>${step.actions.map(action=>'<li>'+E(action)+'</li>').join('')}</ol>
     ${step.code?'<pre tabindex="0">'+E(step.code)+'</pre>':''}
+    ${step.tickets ? ticketsDownload(baseVariant) : ''}
     ${step.file?'<div class="button-row">'+link('Файл для сверки',step.file)+'</div>':''}
     <div class="step-result"><strong>Проверьте себя</strong><p>${E(step.check)}</p></div>
   </section>`;
@@ -270,18 +306,13 @@ function timerBox(attempt,index,mock) {
     ${mock&&!finished?'<p class="timer-hint">После начала время идёт непрерывно, даже при закрытой странице.</p>':''}
   </section>`;
 }
-function conditionParagraphs(text) {
-  return text.split(/(?<=[.!?])\s+(?=[А-ЯЁ])/u).map(line=>`<p>${E(line)}</p>`).join('');
-}
-
 function practiceMaterials() {
-  return `<div class="button-row"><a class="btn" href="examples/tickets-input.csv" download>Исходные заявки · CSV</a>
+  return `<div class="button-row">${ticketsDownload(baseVariant)}
     ${link('КИМ · PDF',D.kim+'#page=31')}</div>`;
 }
 function trainingSample() {
   modal('Условие и исходные данные',`<div class="practice-condition"><p>«Универсальный» — учебный вариант по образцу КИМ.</p>
-    ${D.tasks.map((task,i)=>`<section><h3>Задание ${i+1}. ${E(task.title)}</h3>${conditionParagraphs(task.text)}</section>`).join('')}
-    ${practiceMaterials()}</div>`);
+    ${fullCondition(baseVariant)}</div>`);
 }
 function variantBrief(entry,index) {
   return `<article class="training-task">
@@ -289,20 +320,20 @@ function variantBrief(entry,index) {
       <div><h2>${E(entry.title)}</h2><p class="task-meta">Условие варианта</p></div>
       ${btn('К заданию '+(index+1),`data-task="${index}"`)}
     </header>
-    <section class="practice-condition"><ol>${D.tasks.map(item=>`<li>${E(item.title)}</li>`).join('')}</ol></section>
-    ${practiceMaterials()}
+    <div class="practice-condition">${fullCondition(entry)}</div>
   </article>`;
 }
 
 function practice() {
   const attempt=timer(), {status}=attempt, mock=mode==='mock';
   const index=practiceIndex(), task=D.tasks[index], locked=status==='paused'||status==='finished';
-  const entry=D.variants.find(item=>item.id===variant);
+  const entry=mock ? selectedVariant() : baseVariant;
   const checked=task.checks.map((_,i)=>get('check:'+scope()+':'+task.id+':'+i,false));
   const taskCard = `<article class="training-task">
     <h2>${E(task.title)}</h2>
     <p class="task-meta">Задание ${index+1} · ${task.minutes} мин${mock?' · '+E(entry.title):''}</p>
-    <section class="practice-condition"><h3>Условие задания</h3>${conditionParagraphs(task.text)}</section>
+    <section class="practice-condition"><h3>Условие задания</h3>${taskCondition(task)}
+      <h3>Исходные данные</h3>${taskInputs(task, entry)}</section>
     ${mock?'':`<div class="task-support">${practiceMaterials()}${locked?'':btn('Подсказка к заданию',`data-help="${task.id}"`)}</div>`}
     <section class="self-check training-checklist" aria-labelledby="training-check-title">
       <header><h3 id="training-check-title">Самопроверка</h3><span id="training-check-count" aria-live="polite">${checked.filter(Boolean).length} из ${checked.length}</span></header>
@@ -312,7 +343,7 @@ function practice() {
   </article>`;
   return `<section class="training-page practice-page training-compact ${mock?'mock-exam':''}">
     <header class="workspace-intro">
-      <div><h1>${mock?'Пробный экзамен':'Тренировка'}</h1><p>Универсальный · 3 задания · 75 баллов</p></div>
+      <div><h1>${mock?'Пробный экзамен':'Тренировка'}</h1><p>${E(entry.title)} · 3 задания · 75 баллов</p></div>
       ${!mock&&status!=='paused'?btn('Условие и исходные данные','id="training-sample" aria-haspopup="dialog"'):''}
     </header>
     <div class="attempt-layout">
@@ -321,7 +352,7 @@ function practice() {
         ${mock?`<div class="mock-variant-bar">
           <div class="training-source"><label>Вариант<select id="variant" ${status==='running'?'disabled':''}>${D.variants.map(item=>`<option value="${item.id}" ${item.id===variant?'selected':''}>${E(item.title)}</option>`).join('')}</select></label></div>
           <div class="mock-variant-actions">${btn('Условие варианта',`id="mock-brief" aria-pressed="${showVariantBrief}"`)}
-            <a class="btn" href="examples/tickets-input.csv" download>Исходные заявки · CSV</a></div>
+            ${ticketsDownload(entry)}</div>
         </div>`:''}
         ${status==='paused'?'<section class="pause-screen" tabindex="-1" aria-labelledby="pause-title"><h2 id="pause-title">Тренировка на паузе</h2><p>Отсчёт остановлен. Условия и отметки снова появятся после продолжения.</p></section>':
           status==='finished'?'<section class="attempt-result" tabindex="-1" role="status"><h2>Попытка завершена</h2><p>Отметки сохранены. Можно начать новую попытку.</p></section>':''}
@@ -398,6 +429,7 @@ function navigate(next) {
   const previous = location.href;
   if(next.mode) mode=next.mode;
   if(next.stage) stage=next.stage;
+  if(next.variant) variant=next.variant;
   if(next.view) learningView=next.view;
   render();
   const target = location.href;
@@ -523,7 +555,10 @@ function bind() {
     render();
     document.getElementById('done').focus({preventScroll:true});
   },'onchange');
-  on('variant',event=>{variant=event.target.value;showVariantBrief=false;render();document.getElementById('variant').focus();},'onchange');
+  on('variant',event=>{
+    navigate({variant:event.target.value,preserveScroll:true});
+    document.getElementById('variant').focus({preventScroll:true});
+  },'onchange');
   on('training-sample',trainingSample);
   on('mock-brief',()=>{showVariantBrief=!showVariantBrief;render();document.getElementById('mock-brief').focus();});
   on('timer-sound',event=>{set('timer-sound',event.target.checked);enableTimerSound();},'onchange');
