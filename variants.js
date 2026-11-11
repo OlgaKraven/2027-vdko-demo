@@ -30,6 +30,7 @@ const REPLACEMENT_TICKETS = [
 
 // Positions 1–10 match the base ticket numbers. Each set changes three requests.
 const VARIANT_REPLACEMENTS = [
+  [1, 3, 9],
   [1, 2, 3], [2, 3, 4], [3, 4, 5], [4, 5, 6], [5, 6, 7],
   [6, 7, 8], [7, 8, 9], [8, 9, 10], [1, 9, 10], [1, 2, 10],
   [1, 3, 6], [2, 4, 7], [3, 5, 8], [4, 6, 9], [5, 7, 10],
@@ -38,15 +39,53 @@ const VARIANT_REPLACEMENTS = [
   [2, 6, 9], [3, 7, 10], [1, 4, 8], [2, 5, 9]
 ];
 
-const EXAM_VARIANTS = [
-  {id: 'universal', title: 'Универсальный', tickets: BASE_TICKETS},
-  ...VARIANT_REPLACEMENTS.map((replacements, index) => {
-    const number = String(index + 2).padStart(2, '0');
-    return {
-      id: 'v' + number,
-      title: 'Вариант ' + number,
-      tickets: BASE_TICKETS.map((ticket, row) =>
-        replacements.includes(row + 1) ? REPLACEMENT_TICKETS[row] : ticket)
-    };
-  })
+const REPLACEMENT_TOPICS = [
+  'сетевой принтер', 'код для VPN', 'права на файл', 'внутренние сайты', 'очередь печати',
+  'сбой редактора', 'VPN из дома', 'два монитора', 'подозрительное письмо', 'блокировка входа'
 ];
+
+const EVENT_PROFILES = [
+  ['Хранилище', 'Контроллер диска повторил запрос чтения.', 'Не удалось прочитать блок рабочего тома.', 'Приложение не сохранило временный файл из-за ошибки ввода-вывода.'],
+  ['Сеть', 'Сетевой адаптер перестал отвечать и был перезапущен.', 'Служба не получила сетевой адрес после переподключения.', 'Не удалось открыть сетевой ресурс после запуска ПК.'],
+  ['Печать', 'Служба печати завершилась во время обработки задания.', 'Повторный запуск службы печати прервался.', 'Драйвер принтера вернул ошибку при создании очереди.'],
+  ['Оборудование', 'Система зафиксировала неожиданное завершение работы.', 'USB-контроллер не запустил устройство после включения.', 'Драйвер устройства не загрузился после повторного подключения.'],
+  ['Обновление', 'После перезапуска не удалось завершить установку обновления.', 'Служба обновлений завершилась с ошибкой доступа к каталогу.', 'Проверка одного из системных компонентов завершилась ошибкой.']
+];
+
+const WORKLOAD_PROFILES = [
+  ['Обновление PDF-редактора', 'Редактор', 'Браузер', 'Защитник Windows', '28%', '68%', '65%', '1,4 Мбит/с', 'Идёт фоновая проверка антивируса.'],
+  ['Zoom Workplace', 'Видеоконференция', 'Браузер', 'Мессенджер', '61%', '73%', '22%', '9,8 Мбит/с', 'В фоне открыта видеоконференция.'],
+  ['Google Drive', 'Клиент синхронизации', 'Проводник', 'Редактор', '19%', '56%', '68%', '16,2 Мбит/с', 'Синхронизируется рабочая папка.'],
+  ['Logi Options+', 'Установщик обновлений', 'Защитник Windows', 'Браузер', '47%', '62%', '81%', '4,7 Мбит/с', 'Windows проверяет и распаковывает обновление.'],
+  ['Brother Status Monitor', 'Архиватор', 'Проводник', 'Браузер', '76%', '59%', '89%', '0,4 Мбит/с', 'В фоне продолжается упаковка файлов.'],
+  ['Dropbox', 'DBeaver', 'PostgreSQL', 'Браузер', '34%', '85%', '38%', '0,8 Мбит/с', 'В фоне работает локальная база данных.']
+];
+
+function variantStand(index) {
+  const [eventSource, ...messages] = EVENT_PROFILES[index % EVENT_PROFILES.length];
+  const [startup, first, second, third, cpu, ram, disk, network, background] =
+    WORKLOAD_PROFILES[Math.floor(index / EVENT_PROFILES.length)];
+  return {
+    dbRole: 'client0' + (index % 5 + 1),
+    dbRecord: `client-${String(index + 1).padStart(2, '0')}@example.test`,
+    events: messages.map((message, i) => [`${2 + i * 7} ч назад`, i===0&&eventSource==='Оборудование'?'Критический':'Ошибка', `Учебный источник · ${eventSource}`, message]),
+    startup: ['OneDrive · включён', 'Teams · включён', startup+' · включён'],
+    scan: 'Быстрая проверка завершена. Обнаружений нет.',
+    system: 'Учебная ВМ Windows 11, 4 виртуальных ядра, 8 ГБ ОЗУ, системный диск 80 ГБ.',
+    workload: `За 2 минуты CPU ${cpu}, RAM ${ram}, диск ${disk}, сеть ${network}. Наибольшая нагрузка у процессов «${first}», «${second}» и «${third}». Приоритеты обычные. ${background}`
+  };
+}
+
+const BASE_VARIANT = {id: 'universal', title: 'Универсальный', tickets: BASE_TICKETS, stand: variantStand(0)};
+
+const EXAM_VARIANTS = VARIANT_REPLACEMENTS.map((replacements, index) => {
+  const number = String(index + 1).padStart(2, '0');
+  const topics = replacements.map(position => REPLACEMENT_TOPICS[position - 1]).join(', ');
+  return {
+    id: 'v' + number,
+    title: number + ' · ' + topics,
+    stand: variantStand(index),
+    tickets: BASE_TICKETS.map((ticket, row) =>
+      replacements.includes(row + 1) ? REPLACEMENT_TICKETS[row] : ticket)
+  };
+});

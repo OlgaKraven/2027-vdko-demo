@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Отчёт о настройке MySQL и Windows</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../prog.css">
+<link rel="stylesheet" href="solution.css">
+<main class="shell">
+  <header class="route-heading"><p><a href="../index.html?mode=examples">← К примерам выполнения</a></p><h1>Отчёт о настройке MySQL и Windows</h1></header>
+  <article class="route-panel solution-document">
+    <p>Пример для места 07. Разделы о сервере, данных и правах заполнены по учебному прогону MySQL. Настройка Windows ниже показывает, какие подтверждения собрать на своей ВМ.</p>
+    <h2>Сервер и подключение</h2>
+    <table><thead><tr><th>Параметр</th><th>Значение на стенде</th></tr></thead><tbody>
+      <tr><td>Сервер</td><td>MySQL Community Server 8.4.13, отдельная сборка Windows x64</td></tr>
+      <tr><td>Подключение</td><td>127.0.0.1:15478, база <code>corpdata_07</code>, TCP</td></tr>
+      <tr><td>Файлы</td><td>Каталог стенда <code>mysql-8.4.13-winx64</code> и отдельный каталог данных <code>mysql-review-1211</code></td></tr>
+      <tr><td>Запуск</td><td>Отдельный процесс <code>mysqld.exe</code>. В варианте с установкой службы указать фактическое имя, например <code>lab_sql_07</code>.</td></tr>
+    </tbody></table>
+    <p>На стенде порт 15478 принял TCP-подключение. В маршруте Workbench используйте порт своей установки, проверьте его кнопкой Test Connection, затем выполните <code>SHOW VARIABLES WHERE Variable_name IN ('basedir','datadir','port');</code> и перенесите значения в таблицу.</p>
+    <h2>Таблица и права</h2>
+    <p>Создана <code>corpdata_07.clients</code> с движком InnoDB. Поле <code>id</code> — первичный ключ с <code>AUTO_INCREMENT</code>. Поля <code>name</code> и <code>email</code> имеют тип VARCHAR, поле <code>reg_date</code> — DATE.</p>
+    <table><thead><tr><th>Пользователь</th><th>Операции с clients</th></tr></thead><tbody>
+      <tr><td>client01</td><td>SELECT, INSERT</td></tr>
+      <tr><td>client02</td><td>SELECT, INSERT</td></tr>
+      <tr><td>client03</td><td>SELECT</td></tr>
+      <tr><td>client04</td><td>SELECT, UPDATE</td></tr>
+      <tr><td>client05</td><td>SELECT, DELETE</td></tr>
+    </tbody></table>
+    <p>Из отдельного подключения <code>client03</code> прочитал <code>1 · a@example.test</code> и <code>2 · b@example.test</code>. Проверка UPDATE вернула ошибку 1142. Разрешённые изменения остальных пользователей выполнены в транзакциях с откатом.</p>
+    <p><a href="../assets/learning-results/mysql-terminal.png">Открыть вывод MySQL с проверкой пользователя и прав</a></p>
+    <h2>SQL-выгрузка</h2>
+    <p>Файл содержит структуру таблицы и обе исходные строки. При восстановлении в отдельную пустую схему SELECT вернул id 1 и 2.</p>
+    <p><a href="clients-mysql.sql">Скачать выгрузку MySQL</a></p>
+    <h2>Windows и итоговая проверка</h2>
+    <p>На экзаменационной ВМ укажите рабочий каталог <code>C:\DBAdmin_07</code>, значение пользовательской переменной <code>DB_HOME</code> и путь к <code>sql_reports_07</code>. Приложите вывод <code>icacls</code>, чтение файла под <code>client03</code> и отказ при создании пробного файла. Сохраните снимок ВМ или точку восстановления.</p>
+    <p>Если Test Connection возвращает отказ, сравните порт в настройках клиента с <code>@@port</code> и статусом процесса или службы. При ошибке доступа после подключения сопоставьте аккаунт с <code>CURRENT_USER()</code> и <code>SHOW GRANTS</code>.</p>
+  </article>
+</main>
+</html>

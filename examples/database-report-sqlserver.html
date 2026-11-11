@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Отчёт о настройке SQL Server и Windows</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../prog.css">
+<link rel="stylesheet" href="solution.css">
+<main class="shell">
+  <header class="route-heading"><p><a href="../index.html?mode=examples">← К примерам выполнения</a></p><h1>Отчёт о настройке SQL Server и Windows</h1></header>
+  <article class="route-panel solution-document">
+    <p>Пример для места 07. Таблица, операции и восстановление проверены в SQL Server Express LocalDB. Для учебного маршрута с SSMS и DBeaver заполните параметры сетевого экземпляра по своей ВМ.</p>
+    <h2>Сервер и подключение</h2>
+    <table><thead><tr><th>Параметр</th><th>Локальная проверка</th><th>Что зафиксировать на ВМ</th></tr></thead><tbody>
+      <tr><td>Экземпляр</td><td>SQL Server Express LocalDB 17.0.4025.3, <code>VdkoTrainingAudit07</code></td><td>Именованный экземпляр <code>LAB_SQL_07</code> и версия из <code>SERVERPROPERTY('ProductVersion')</code></td></tr>
+      <tr><td>Подключение</td><td><code>(localdb)\VdkoTrainingAudit07</code>, Windows Authentication, <code>corpdata_07</code></td><td>Адрес, фактический TCP-порт, база и отдельный вход под <code>client03</code></td></tr>
+      <tr><td>Установка и данные</td><td>Локальная установленная сборка, каталог данных экземпляра LocalDB</td><td>Путь установки, путь файлов данных и журналов, состояние службы SQL Server</td></tr>
+    </tbody></table>
+    <p>Подключение LocalDB использовалось для проверки таблицы, прав и восстановления. Для сетевого сценария проверьте доступ к экземпляру из SSMS, а затем выполните <code>SELECT ORIGINAL_LOGIN(), DB_NAME();</code> в отдельном соединении DBeaver.</p>
+    <h2>Таблица и права</h2>
+    <p>В <code>corpdata_07</code> создана <code>dbo.clients</code>. Поле <code>id</code> — INT с <code>IDENTITY(1,1)</code> и первичным ключом. Поля <code>name</code> и <code>email</code> имеют тип VARCHAR, поле <code>reg_date</code> — DATE.</p>
+    <table><thead><tr><th>Пользователь</th><th>Операции с dbo.clients</th></tr></thead><tbody>
+      <tr><td>client01</td><td>SELECT, INSERT</td></tr>
+      <tr><td>client02</td><td>SELECT, INSERT</td></tr>
+      <tr><td>client03</td><td>SELECT</td></tr>
+      <tr><td>client04</td><td>SELECT, UPDATE</td></tr>
+      <tr><td>client05</td><td>SELECT, DELETE</td></tr>
+    </tbody></table>
+    <p>Под <code>EXECUTE AS USER = 'client03'</code> SELECT вернул <code>1 · a@example.test</code> и <code>2 · b@example.test</code>. UPDATE отклонён с кодом 229. Допустимые изменения выполнены в отдельных транзакциях с откатом.</p>
+    <p><a href="../assets/learning-results/sqlserver-terminal.png">Открыть вывод sqlcmd с проверкой прав</a></p>
+    <h2>SQL-файл и восстановление</h2>
+    <p>В примере сохранены CREATE TABLE и обе строки с исходными id. В отдельной пустой базе после выполнения файла SELECT вернул id 1 и 2. При экспорте в SSMS через Generate Scripts выберите <strong>Schema and data</strong>.</p>
+    <p><a href="clients-sqlserver.sql">Скачать проверенный SQL-файл</a></p>
+    <h2>Windows и итоговая проверка</h2>
+    <p>На учебной ВМ проверьте TCP-порт и запущенную службу. В отчёт приложите данные подключения под <code>client03</code>, вывод <code>icacls</code> для <code>sql_reports_07</code>, подтверждения чтения и запрета записи, значение <code>DB_HOME</code> для <code>dbadmin_07</code> и снимок ВМ либо точку восстановления.</p>
+    <p>Если вход через DBeaver отклонён, проверьте режим аутентификации, наличие логина и сопоставление логина с пользователем в <code>corpdata_07</code>. После исправления сначала подтвердите имя пользователя и базы, затем повторите SELECT.</p>
+  </article>
+</main>
+</html>

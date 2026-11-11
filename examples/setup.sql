@@ -5,11 +5,46 @@
 \endif
 SELECT 'corpdata_' || :'seat' AS dbname \gset
 
--- Выполнить в psql от администратора на чистом учебном экземпляре.
-CREATE DATABASE :"dbname";
+-- Запускайте из служебной БД postgres на изолированном учебном экземпляре.
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM pg_roles WHERE rolname IN ('client01','client02','client03','client04','client05')) THEN
+        RAISE EXCEPTION 'На экземпляре уже есть учебные роли client01–client05. Используйте чистый экземпляр или восстановите учебный снимок.';
+    END IF;
+END
+$$;
+
+\if :{?resume}
+\else
+\set resume false
+\endif
+\if :resume
+    -- Явное продолжение после прерванного создания БД. Чужая база не изменяется.
+    SELECT EXISTS (
+        SELECT FROM pg_database WHERE datname = :'dbname' AND pg_get_userbyid(datdba) = current_user
+    ) AS owned_database \gset
+    \if :owned_database
+    \else
+        DO $$ BEGIN RAISE EXCEPTION 'Для продолжения нужна созданная вами учебная БД.'; END $$;
+    \endif
+\else
+    CREATE DATABASE :"dbname";
+\endif
 \connect :dbname
 
 BEGIN;
+SELECT pg_advisory_xact_lock(905, 2027);
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM pg_namespace WHERE nspname NOT IN ('public','information_schema','pg_catalog','pg_toast'))
+       OR EXISTS (SELECT FROM pg_class WHERE relnamespace = 'public'::regnamespace)
+       OR EXISTS (SELECT FROM pg_proc WHERE pronamespace = 'public'::regnamespace)
+       OR EXISTS (SELECT FROM pg_type WHERE typnamespace = 'public'::regnamespace)
+       OR EXISTS (SELECT FROM pg_extension WHERE extname <> 'plpgsql') THEN
+        RAISE EXCEPTION 'Учебная база должна быть пустой. Существующие объекты сохранены.';
+    END IF;
+END
+$$;
 CREATE ROLE client01 LOGIN;
 CREATE ROLE client02 LOGIN;
 CREATE ROLE client03 LOGIN;

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Оператор технической поддержки · Презентация</title>
+  <link rel="stylesheet" href="presentation.css?v=2">
+  <script src="core.js" defer></script>
+  <script src="variants.js" defer></script>
+  <script src="database-learning.js?v=8" defer></script>
+  <script src="content.js?v=8" defer></script>
+  <script src="presentation-data.js?v=4" defer></script>
+  <script src="presentation.js?v=3" defer></script>
+</head>
+<body>
+  <div class="show-viewer">
+    <header class="show-bar" id="show-bar">
+      <a href="index.html?mode=teacher" id="show-return">← Преподавателю</a>
+      <div class="show-course">
+        <small>ДЭ 2027 · 09.01.05</small>
+        <strong>Оператор технической поддержки</strong>
+      </div>
+      <div class="show-actions">
+        <button type="button" id="show-contents">Содержание</button>
+        <button type="button" id="show-pointer" aria-pressed="false">Указка</button>
+        <button type="button" id="show-fullscreen">Во весь экран</button>
+        <button type="button" id="show-theme" aria-pressed="false">Тёмная тема</button>
+        <button type="button" id="show-audience" class="show-primary">Режим показа</button>
+      </div>
+      <p id="show-status" role="status"></p>
+    </header>
+    <progress class="show-progress" id="show-progress" aria-label="Ход презентации"></progress>
+    <main class="show-workspace">
+      <div class="show-stage">
+        <article class="show-canvas" aria-labelledby="show-slide-title">
+          <div class="show-slide" id="show-slide"></div>
+          <span class="show-laser" id="show-laser" hidden></span>
+        </article>
+      </div>
+      <aside class="show-notes" id="show-notes" aria-labelledby="show-notes-title" hidden>
+        <h2 id="show-notes-title">Сценарий показа</h2>
+        <p id="show-script"></p>
+        <p id="show-answer-notes" hidden></p>
+      </aside>
+    </main>
+    <footer class="show-nav" id="show-nav">
+      <button type="button" id="show-prev" aria-keyshortcuts="ArrowLeft">← Назад</button>
+      <output id="show-counter" aria-live="polite"></output>
+      <button type="button" id="show-answer" hidden>Показать ответ</button>
+      <button type="button" id="show-next" class="show-primary" aria-keyshortcuts="ArrowRight">Вперёд →</button>
+    </footer>
+  </div>
+  <dialog id="show-index" aria-labelledby="show-index-title">
+    <header>
+      <h2 id="show-index-title">Содержание</h2>
+      <form method="dialog"><button type="submit">Закрыть</button></form>
+    </header>
+    <div id="show-index-list"></div>
+  </dialog>
+</body>
+</html>

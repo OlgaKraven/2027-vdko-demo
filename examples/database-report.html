@@ -2,13 +2,17 @@
 <html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Отчёт о настройке PostgreSQL и Windows · ДЭ 2027</title>
 <link rel="stylesheet" href="../style.css"><link rel="stylesheet" href="../prog.css"><link rel="stylesheet" href="solution.css">
-<main class="shell"><header class="route-heading"><p><a href="../index.html?mode=examples">← К готовому решению</a></p><h1>Отчёт о настройке PostgreSQL и Windows</h1></header>
+<main class="shell"><header class="route-heading"><p><a href="../index.html?mode=examples">← К примерам выполнения</a></p><h1>Отчёт о настройке PostgreSQL и Windows</h1></header>
 <article class="route-panel solution-document">
-<p>Образец для места 07. Параметры Windows и подтверждения берите со своего стенда.</p>
+<p>Образец для места 07. Параметры установки, настройки Windows и подтверждения для сдачи берите со своего стенда.</p>
+<h2>Результат прогона PostgreSQL</h2>
+<p>PostgreSQL 18.1, экземпляр <code>lab_sql_07</code>, адрес <code>127.0.0.1:15476</code>. В <code>corpdata_07.public.clients</code> сохранены две записи: 1 — a@example.test и 2 — b@example.test. Под <code>client03</code> SELECT вернул обе записи. Сервер отклонил UPDATE с кодом 42501. Под <code>client01</code> INSERT вернул id 3, после ROLLBACK число пробных строк равно 0.</p>
+<p>Выгрузка <code>clients.sql</code> содержит CREATE TABLE и две исходные строки. После восстановления в отдельной базе SELECT вернул id 1 и 2.</p>
 <h2>Установка и совместимость</h2>
-<p>PostgreSQL 16, изолированная ВМ, локальное подключение 127.0.0.1:5432 в примере. Если на стенде другой порт, укажите его вместо 5432 во всех командах и подключениях. В конфигурации экземпляра задайте <code>cluster_name = 'lab_sql_07'</code> и перезапустите службу. В отчёт перенесите фактическое имя службы, путь установки и каталог данных. Проверьте свободный порт перед установкой, запущенную службу и версию через <code>SELECT version()</code>. Название подключения в DBeaver задайте <code>lab_sql_07</code>.</p>
+<p>В командах ниже указан стандартный порт 5432. Если на стенде выбран другой порт, подставьте его во все команды и подключения. В конфигурации экземпляра задайте <code>cluster_name = 'lab_sql_07'</code> и перезапустите службу. В отчёт перенесите фактическое имя службы, путь установки и каталог данных. Проверьте свободный порт перед установкой, запущенную службу и версию через <code>SELECT version()</code>. Название подключения в DBeaver задайте <code>lab_sql_07</code>.</p>
 <h2>База, роли и экспорт</h2>
 <p>Из каталога примеров выполните <code>psql -X -h 127.0.0.1 -p 5432 -U postgres -d postgres -v seat=07 -f setup.sql</code> на чистом учебном сервере. Если утилиты отсутствуют в PATH, укажите полный путь к psql.exe и pg_dump.exe из папки bin установленного PostgreSQL. Задайте пароли пяти ролям командой <code>\password</code> в psql. В DBeaver создайте отдельные подключения с этими логинами. Запрос <code>SELECT current_user, current_database();</code> подтверждает контекст.</p>
+<p>Если предыдущий запуск прервался после создания вашей пустой <code>corpdata_07</code>, добавьте к команде <code>-v resume=on</code>. Если на экземпляре уже есть учебные роли другого места, подготовьте отдельный экземпляр или восстановите чистый снимок.</p>
 <table><thead><tr><th>Роль</th><th>Разрешено</th><th>Контрольная операция, ожидается отказ</th></tr></thead><tbody>
 <tr><td>client01</td><td>SELECT, INSERT</td><td>UPDATE</td></tr><tr><td>client02</td><td>SELECT, INSERT</td><td>DELETE</td></tr>
 <tr><td>client03</td><td>SELECT</td><td>INSERT</td></tr><tr><td>client04</td><td>SELECT, UPDATE</td><td>DELETE</td></tr>
