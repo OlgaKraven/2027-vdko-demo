@@ -234,7 +234,8 @@ function lessonBrief(lesson) {
     [...new Set(points.flatMap(point => [...(point.screenshots ?? []), ...(point.result?.screenshots ?? [])]))]);
   const resultFiles = new Map(points.flatMap(point => point.result?.files ?? []).map(file => [file[1], file]));
   return `<div class="lesson-brief">
-    ${task ? '<h3>Условие задания</h3>' + taskCondition(task) : '<p>'+E(preparation)+'</p>'}
+    ${task ? '<h3>Условие задания</h3>' + taskCondition(task) : `<p>${E(preparation)}</p>
+      <p><a href="examples/preparation.html">0. Установка и настройка программ</a> · <a href="examples/preparation.html#faq">ЧаВО об экзамене</a></p>`}
     ${lessonMaterials(lesson.id, screenshots, null, [...resultFiles.values()])}
     ${stageResult(lesson)}
     ${btn(get('step:'+progressKey(lesson))===null?'Перейти к шагам и примерам →':stepIndex(lesson)===lesson.steps.length?'Что сохранить →':'Продолжить с шага '+(stepIndex(lesson)+1)+' →','data-lesson-view="steps"',true)}
@@ -529,6 +530,8 @@ function examples() {
         <p>Реестр, ответы и карты даны в форматах сдачи. Отчёты показывают, как описать настройку и диагностику. Снимки экрана, EVTX и подтверждение антивирусной проверки соберите на своём стенде.</p>
         <div class="example-actions"><a class="btn primary" href="examples/universal-solution.zip" download>Скачать примеры · ZIP</a>
         ${btn('Открыть маршрут →','data-mode="learn"')}</div>
+        <h3>Проверьте комплект</h3>
+        <p>После распаковки откройте <code>index.html</code>. Для задания 2 <a href="examples/preparation.html#database">импортируйте выгрузку для своей СУБД</a> в пустую базу и проверьте две строки в <code>clients</code>.</p>
       </article>
       <article class="route-panel">
         <h2>Внутри комплекта</h2>
