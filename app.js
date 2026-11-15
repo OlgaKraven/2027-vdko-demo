@@ -235,7 +235,7 @@ function lessonBrief(lesson) {
   const resultFiles = new Map(points.flatMap(point => point.result?.files ?? []).map(file => [file[1], file]));
   return `<div class="lesson-brief">
     ${task ? '<h3>Условие задания</h3>' + taskCondition(task) : `<p>${E(preparation)}</p>
-      <p><a href="examples/preparation.html">0. Установка и настройка программ</a> · <a href="examples/preparation.html#faq">ЧаВО об экзамене</a></p>`}
+      <p><a href="examples/learning-preparation.html">0. Установка и настройка программ</a> · <a href="examples/learning-preparation.html#faq">ЧаВО об экзамене</a></p>`}
     ${lessonMaterials(lesson.id, screenshots, null, [...resultFiles.values()])}
     ${stageResult(lesson)}
     ${btn(get('step:'+progressKey(lesson))===null?'Перейти к шагам и примерам →':stepIndex(lesson)===lesson.steps.length?'Что сохранить →':'Продолжить с шага '+(stepIndex(lesson)+1)+' →','data-lesson-view="steps"',true)}
@@ -607,7 +607,7 @@ function lessonMaterials(stageId, screenshots = [], materialIds = null, resultFi
         <a href="${E(file.path || '#lesson-materials')}" data-lesson-material="${E(file.id)}" aria-haspopup="dialog">${E(file.name)}</a>
       </li>`).join('')}
       ${resultFiles.map(([label, path, preview = path])=>`<li>
-        <a href="${E(path)}" data-material-path="${E(path)}" data-material-preview="${E(preview)}" aria-haspopup="dialog">${E(label)}</a>
+        <button type="button" class="btn" data-material-path="${E(path)}" data-material-preview="${E(preview)}" aria-haspopup="dialog">${E(label)}</button>
       </li>`).join('')}
       ${screenshots.map(key=>{
         const shot = D.screenshots[key];
@@ -671,7 +671,8 @@ function materialViewer(title, files) {
   function show(index) {
     const file = files[index];
     buttons.forEach((button,i)=>button.setAttribute('aria-pressed',String(index===i)));
-    const download = file.path ? `<a class="btn" href="${E(file.path.split('#')[0])}" download>Скачать файл</a>` : '';
+    const lessonCode = mode==='learn' && /\.(sql|ps1|cmd|bat|py|js|cs)(?:$|#)/i.test(file.preview || file.path || '');
+    const download = file.path && !lessonCode ? `<a class="btn" href="${E(file.path.split('#')[0])}" download>Скачать файл</a>` : '';
     preview.innerHTML = `<div class="material-preview-heading"><h3>${E(file.name)}</h3>${download}</div><div class="material-preview-body"></div>`;
     const body = preview.querySelector('.material-preview-body');
     if (file.html) {
@@ -709,13 +710,20 @@ function materialViewer(title, files) {
           link.rel = 'noopener';
         });
         body.replaceChildren(example);
+      } else if (lessonCode) {
+        body.innerHTML = `<div class="worked-code">
+          <p>Сверьте скрипт со своим результатом. Чтобы проверить отдельную команду, вставьте её в редактор SQL своей учебной базы.</p>
+          <div class="worked-code-actions"><span role="status"></span>${btn('Копировать код','type="button" data-copy-preview')}</div>
+          <pre tabindex="0"><code>${E(value)}</code></pre>
+        </div>`;
+        body.querySelector('[data-copy-preview]').onclick = copyLessonCode;
       } else if (source.endsWith('.csv')) {
         body.innerHTML = previewCsv(value);
       } else {
         text.textContent = value;
       }
     }).catch(()=>{
-      text.textContent = file.path
+      text.textContent = lessonCode ? 'Не удалось показать код. Обновите страницу и откройте карточку снова.' : file.path
         ? 'Не удалось показать содержимое. Воспользуйтесь кнопкой «Скачать файл».'
         : 'Не удалось открыть предпросмотр. Материал доступен в ZIP на странице примеров.';
     });
