@@ -21,7 +21,7 @@ function readRoute(restore=false) {
   const fileRoute = location.protocol==='file:' && location.hash.startsWith('#mode=');
   const query = new URLSearchParams(fileRoute ? location.hash.slice(1) : location.search);
   const legacyTask = /^#task-([123])$/.exec(location.hash);
-  const requestedMode = query.get('mode') || (legacyTask ? 'learn' : location.hash==='#variative' ? 'overview' : null) || (restore ? get('mode','overview') : 'overview');
+  const requestedMode = query.get('mode') || (legacyTask ? 'learn' : 'overview');
   const practiceMode = requestedMode==='mock' || requestedMode==='training';
   const requestedStage = (!practiceMode && query.get('module')) || (legacyTask ? 'M'+legacyTask[1] : null) ||
     ((restore || practiceMode) ? get('stage','documents') : 'documents');
@@ -766,7 +766,7 @@ function navigate(next) {
   if (!next.preserveScroll) window.scrollTo(0,0);
 }
 function render() {
-  set('mode',mode);set('stage',stage);set('variant',variant);
+  set('stage',stage);set('variant',variant);
   document.body.classList.toggle('dark',dark);
   const activeModule = mode==='mock'||mode==='training' ? D.tasks[practiceIndex()].id : stage;
   const url = new URLSearchParams({mode,module:activeModule,variant});
