@@ -351,8 +351,9 @@ const DATABASE_ROUTES = [
             actions: [
               'Откройте у clients View/Edit Data → All Rows.',
               'Добавьте строки из таблицы ниже. Заполните name, email и reg_date. Оставьте id пустым.',
-              'Нажмите Save Data Changes. Повторно откройте данные и проверьте, что сервер присвоил id 1 и 2.'
+              'Нажмите Save Data Changes. В Query Tool базы corpdata_07 выполните запрос. ORDER BY id сохраняет порядок при сверке двух строк.'
             ],
+            code: 'SELECT id, name, email, reg_date FROM public.clients ORDER BY id;',
             table: postgresClientRows
           },
           {
@@ -465,8 +466,10 @@ const DATABASE_ROUTES = [
               'У corpdata_07 → Tables выберите Create Table.',
               'Введите имя clients и выберите движок InnoDB для поддержки транзакций.',
               'Добавьте поля по таблице ниже. У id отметьте PK, NN и AI. У остальных полей отметьте NN.',
-              'Нажмите Apply. Проверьте AUTO_INCREMENT и PRIMARY KEY в SQL, затем подтвердите изменения.'
+              'Нажмите Apply. Проверьте AUTO_INCREMENT и PRIMARY KEY в SQL, затем подтвердите изменения.',
+              'В новой вкладке SQL выполните команду ниже. Она показывает определение таблицы, которое сохранил сервер.'
             ],
+            code: 'SHOW CREATE TABLE corpdata_07.clients;',
             table: clientColumns('PK, NN, AI')
           },
           {
@@ -608,8 +611,9 @@ GRANT SELECT, DELETE ON corpdata_07.clients TO 'client05'@'127.0.0.1';`,
             actions: [
               'Откройте у dbo.clients Edit Top 200 Rows.',
               'Введите имя, адрес и дату, оставьте id пустым. Перейдите на следующую строку для сохранения и повторите для второй записи.',
-              'Откройте Select Top 1000 Rows и сверьте две строки с присвоенными id.'
+              'В SSMS откройте New Query с выбранной базой corpdata_07. Выполните запрос и сверьте поля и автоматически выданные id.'
             ],
+            code: 'SELECT id, name, email, reg_date FROM dbo.clients ORDER BY id;',
             table: clientRows
           },
           {
