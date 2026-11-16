@@ -4,10 +4,9 @@ const DATABASE_ROUTE_PREFERENCE = 'learning-stack';
 const PRESENTATION_ROUTE_PREFERENCE = 'presentation-stack';
 const PRESENTATION_ROUTE_KEY = '2027-vdko-demo:v1:' + PRESENTATION_ROUTE_PREFERENCE;
 const DEFAULT_DATABASE_ROUTE = 'mysql';
-const postgresRoutes = ['postgres-sql', 'pgadmin'];
-
 function databaseRouteFor(id) {
-  return DATABASE_ROUTES.find(route => route.id === id) ??
+  const currentId = id === 'postgres-sql' ? 'pgadmin' : id;
+  return DATABASE_ROUTES.find(route => route.id === currentId) ??
     DATABASE_ROUTES.find(route => route.id === DEFAULT_DATABASE_ROUTE);
 }
 
@@ -24,11 +23,41 @@ function pgScreen(file, title, hint, page) {
     'https://www.pgadmin.org/docs/pgadmin4/latest/' + page + '.html', 'Документация pgAdmin');
 }
 
-function dbResultScreen(file, title, hint) {
-  return {path: 'assets/learning-results/' + file + '.png', title, hint};
+function dbResultScreen(file, title, hint, routes) {
+  return {path: 'assets/learning-results/' + file + '.png', title, hint, routes};
 }
 
 const DATABASE_SCREENSHOTS = {
+  labPgVerifiedRows: dbResultScreen('pg-dbeaver-rows', 'DBeaver · чтение двух строк под client03',
+    'Название подключения видно над редактором. В результатах обе исходные строки, даже если id были выданы в другом порядке.', ['pgadmin']),
+  labPgDenied: dbResultScreen('pg-dbeaver-denied', 'DBeaver · запрет обновления под client03',
+    'Код PostgreSQL 42501 подтверждает, что сервер запретил UPDATE.', ['pgadmin']),
+  labPgDatabaseAcl: dbResultScreen('pg-database-acl', 'pgAdmin · CONNECT для учебной базы',
+    'После сохранения первых выдач обычные права базы видны в Security. У PUBLIC снят CONNECT.'),
+  labPgSchemaAcl: dbResultScreen('pg-schema-acl', 'pgAdmin · доступ к схеме public',
+    'У каждой учебной роли указана буква U (USAGE). C означала бы разрешение создавать объекты.'),
+  labPgTableAcl: dbResultScreen('pg-table-acl', 'pgAdmin · пять строк разрешений clients',
+    'r означает SELECT, a — INSERT, w — UPDATE, d — DELETE.'),
+  labPgRoleLogin: dbResultScreen('pg-role-login', 'pgAdmin · разрешение входа роли',
+    'В Privileges включён Can login?, а Superuser и Create databases выключены.'),
+  labPgStudentRows: dbResultScreen('pg-student-rows', 'pgAdmin · две сохранённые записи',
+    'Сверьте имя, почту и дату. Счётчик id может пропускать номера после отменённых попыток ввода.'),
+  labMysqlSchema: dbResultScreen('mysql-schema-student', 'Workbench · создание учебной схемы',
+    'В редакторе задано имя corpdata_07. При выборе Default Charset применяется штатная кодировка сервера.'),
+  labMysqlColumns: dbResultScreen('mysql-columns-student', 'Workbench · колонки и ограничения',
+    'У id отмечены PK, NN и AI. У остальных полей отмечен NN. В сетке четыре заполненные строки.'),
+  labMysqlForm: dbResultScreen('mysql-form-student', 'Workbench · ввод записи в Form Editor',
+    'Заполните Name, Email и Reg_date. Id получит значение при сохранении.'),
+  labMysqlRoles: dbResultScreen('mysql-roles-student', 'Workbench · пять учебных пользователей',
+    'В User Accounts видны client01–client05. Хост каждой записи — 127.0.0.1.'),
+  labMysqlVerifiedRows: dbResultScreen('mysql-dbeaver-rows', 'DBeaver · две строки под MySQL client03',
+    'Над редактором видно активное подключение. В таблице результата остались оба клиента.', ['mysql']),
+  labMysqlDenied: dbResultScreen('mysql-dbeaver-denied', 'DBeaver · запрет UPDATE в MySQL',
+    'Ошибка 1142 подтверждает, что текущему пользователю не разрешено обновление.', ['mysql']),
+  labSqlVerifiedRows: dbResultScreen('sqlserver-dbeaver-rows', 'DBeaver · две строки SQL Server под client03',
+    'Отдельное подключение с логином client03 читает сохранившиеся записи из dbo.clients.', ['sqlserver']),
+  labSqlDenied: dbResultScreen('sqlserver-dbeaver-denied', 'DBeaver · запрет UPDATE в SQL Server',
+    'Ошибка 229 на таблице dbo.clients подтверждает ограничение права записи.', ['sqlserver']),
   labPgConnection: dbResultScreen('pg-connection', 'pgAdmin · подключение к учебному PostgreSQL',
     'В Connection указан адрес 127.0.0.1. На этом стенде используется порт 15476.'),
   labPgDatabase: dbResultScreen('pg-database', 'pgAdmin · создание corpdata_07',
@@ -126,10 +155,10 @@ const DATABASE_SCREENSHOTS = {
     'https://learn.microsoft.com/en-us/ssms/tutorials/scripting-ssms', 'Microsoft Learn'),
   dbeaverConnect: dbScreen('dbeaver-connect.png', 'DBeaver · параметры подключения',
     'После выбора драйвера заполните Host, Port, Database и Username. Проверьте соединение кнопкой Test Connection.',
-    'https://dbeaver.com/docs/dbeaver/Create-Connection/', 'Документация DBeaver', postgresRoutes),
+    'https://dbeaver.com/docs/dbeaver/Create-Connection/', 'Документация DBeaver'),
   dbeaverSql: dbScreen('dbeaver-sql.png', 'DBeaver · редактор SQL и результаты',
     'Сверьте активное соединение в верхней панели. Выполните запрос в редакторе и проверьте строки на вкладке результатов.',
-    'https://dbeaver.com/docs/dbeaver/SQL-Editor/', 'Документация DBeaver', postgresRoutes),
+    'https://dbeaver.com/docs/dbeaver/SQL-Editor/', 'Документация DBeaver'),
   dbeaverExecuteMenu: dbScreen('dbeaver-execute-menu.png', 'DBeaver · запуск скрипта через меню SQL Editor',
     'В меню SQL Editor выберите Execute SQL script. В Windows можно нажать Alt+X. Для одной команды под курсором выберите Execute SQL query.',
     'https://dbeaver.com/docs/dbeaver/SQL-Execution/', 'Документация DBeaver'),
@@ -138,13 +167,13 @@ const DATABASE_SCREENSHOTS = {
     'https://dbeaver.com/docs/dbeaver/SQL-Execution/', 'Документация DBeaver'),
   dbeaverGrid: dbScreen('dbeaver-grid.png', 'DBeaver · редактор данных',
     'Записи отображаются в центральной сетке. Добавление, удаление и Save находятся в нижней панели.',
-    'https://github.com/dbeaver/dbeaver/wiki/Data-Editor', 'Документация DBeaver', postgresRoutes),
+    'https://github.com/dbeaver/dbeaver/wiki/Data-Editor', 'Документация DBeaver'),
   dbeaverEdit: dbScreen('dbeaver-edit.png', 'DBeaver · редактирование ячейки',
     'Откройте значение в сетке двойным щелчком либо вызовите отдельный редактор через Edit cell.',
-    'https://dbeaver.com/docs/dbeaver/Data-Viewing-and-Editing/', 'Документация DBeaver', postgresRoutes),
+    'https://dbeaver.com/docs/dbeaver/Data-Viewing-and-Editing/', 'Документация DBeaver'),
   dbeaverRollback: dbScreen('dbeaver-transactions.png', 'DBeaver · открытая транзакция',
     'Найдите своё соединение в Pending transactions. Пробную запись отмените кнопкой Rollback.',
-    'https://dbeaver.com/docs/dbeaver/Auto-and-Manual-Commit-Modes/', 'Документация DBeaver', postgresRoutes)
+    'https://dbeaver.com/docs/dbeaver/Auto-and-Manual-Commit-Modes/', 'Документация DBeaver')
 };
 
 function databaseStep(title, exampleTitle, input, points, result) {
@@ -202,13 +231,13 @@ function openClientGrid(connection, path) {
     screenshots: ['dbeaverConnect', 'dbeaverGrid'],
     actions: [
       connection,
-      'Откройте редактор таблицы ' + path + ' и вкладку Data.',
-      'В редакторе по заголовку id включите сортировку по возрастанию. Проверьте две строки с a@example.test и b@example.test.',
+      'В дереве подключения откройте Databases (если есть) → ' + path + '. Откройте таблицу двойным щелчком, затем вкладку Data.',
+      'В редакторе по заголовку email включите сортировку по возрастанию. Проверьте строки a@example.test и b@example.test.',
       'Сохраните экран вкладки Data с названием подключения client03. Для проверок изменения используйте отдельные подключения под соответствующими пользователями.'
     ],
     result: {
-      text: 'После подключения под client03 сетка показывает две записи. Порядок строк при сортировке по id показан ниже.',
-      table: {columns: ['id', 'email'], rows: [[1, 'a@example.test'], [2, 'b@example.test']]}
+      text: 'В сетке под client03 видны обе записи.',
+      table: {columns: ['email'], rows: [['a@example.test'], ['b@example.test']]}
     }
   };
 }
@@ -280,19 +309,19 @@ function checkDatabaseReader(table, context, connection, login, error, screensho
       'Выполните UPDATE с условием 1 = 0. Оно исключает изменение строк при ошибочно выданном праве.',
       'Проверьте, что сервер отказал в UPDATE. Если запрос выполнился, сверьте права с матрицей.'
     ],
-    code: [context, 'SELECT id, email FROM ' + table + ' ORDER BY id;',
-      'UPDATE ' + table + " SET name = 'Probe' WHERE 1 = 0;"].join('\n'),
+    codeNote: 'Первый запрос показывает учётную запись и базу. SELECT читает строки из указанной таблицы. UPDATE с условием 1 = 0 проверяет разрешение без изменения данных.',
+    code: [context, 'SELECT id, name, email, reg_date FROM ' + table + ' ORDER BY email;',
+      'UPDATE ' + table + ' SET name = name WHERE 1 = 0;'].join('\n'),
     result: {
       text: 'Подключение — ' + login + ' в corpdata_07. SELECT возвращает обе строки. Сервер отклоняет UPDATE до изменения данных.',
-      table: {columns: ['id', 'email'], rows: [[1, 'a@example.test'], [2, 'b@example.test']]},
+      table: {columns: ['email'], rows: [['a@example.test'], ['b@example.test']]},
       output: error,
-      screenshots: [screenshot]
+      screenshots: [screenshot].flat()
     }
   };
 }
 
 const DATABASE_ROUTES = [
-  {id: 'postgres-sql', title: 'PostgreSQL · SQL в DBeaver'},
   {
     id: 'pgadmin', title: 'PostgreSQL · pgAdmin',
     steps: [
@@ -300,6 +329,7 @@ const DATABASE_ROUTES = [
         'В отдельной Windows-ВМ используем свободный порт 5432 и подключение к 127.0.0.1.', [
           {
             title: 'Устанавливаем сервер и регистрируем подключение',
+            links: [['Скачать PostgreSQL, pgAdmin и JDBC-драйвер', 'examples/learning-preparation.html#postgresql']],
             screenshots: ['labPgConnection'],
             actions: [
               'В установщике PostgreSQL выберите сервер, pgAdmin 4 и командные утилиты.',
@@ -310,6 +340,7 @@ const DATABASE_ROUTES = [
           },
           {
             title: 'Настраиваем имя экземпляра',
+            codeNote: 'SHOW config_file находит файл настройки, SHOW cluster_name проверяет имя после перезапуска, а последние две команды показывают порт и каталог данных.',
             actions: [
               'Откройте Query Tool в базе postgres и выполните SHOW config_file.',
               'В найденном postgresql.conf задайте cluster_name = \'lab_sql_07\'. Перезапустите учебную службу через services.msc.',
@@ -347,18 +378,19 @@ const DATABASE_ROUTES = [
           {
             title: 'Добавляем две строки',
             screenshots: ['pgData'],
-            result: {table: savedClientRows(postgresClientRows), screenshots: ['labPgRows']},
+            result: {table: postgresClientRows, screenshots: ['labPgStudentRows']},
             actions: [
               'Откройте у clients View/Edit Data → All Rows.',
-              'Добавьте строки из таблицы ниже. Заполните name, email и reg_date. Оставьте id пустым.',
-              'Нажмите Save Data Changes. В Query Tool базы corpdata_07 выполните запрос. ORDER BY id сохраняет порядок при сверке двух строк.'
+              'Нажмите Add new row. Двойным щелчком откройте каждую ячейку name, email и reg_date и внесите значения из таблицы. Поле id оставьте пустым. Для второй строки снова нажмите Add new row: новая строка может появиться выше предыдущей.',
+              'Нажмите Save Data Changes. Для сверки откройте Query Tool базы corpdata_07 и выполните запрос. Сверьте две строки по почте. Если были отменённые вставки, значения id могут различаться.'
             ],
-            code: 'SELECT id, name, email, reg_date FROM public.clients ORDER BY id;',
+            codeNote: 'SELECT показывает четыре столбца таблицы. ORDER BY email помогает сопоставить записи с образцом независимо от присвоенных id.',
+            code: 'SELECT id, name, email, reg_date FROM public.clients ORDER BY email;',
             table: postgresClientRows
           },
           {
             title: 'Создаём пять ролей с входом',
-            screenshots: ['pgRole'],
+            screenshots: ['labPgRoleLogin'],
             actions: [
               'На уровне сервера откройте Login/Group Roles → Create → Login/Group Role.',
               'На вкладке General укажите Name = client01. На Definition задайте пароль от восьми символов с буквами, цифрами и спецсимволами.',
@@ -368,16 +400,17 @@ const DATABASE_ROUTES = [
           },
           {
             title: 'Настраиваем доступ к базе и схеме',
-            screenshots: ['pgDatabaseRights', 'pgSchemaRights'],
+            screenshots: ['labPgDatabaseAcl', 'labPgSchemaAcl'],
             actions: [
-              'Откройте свойства corpdata_07 → Security. Выдайте пяти ролям CONNECT и снимите CONNECT у PUBLIC в учебной базе.',
+              'Откройте свойства corpdata_07 → Security. Для каждой роли нажмите «+» в Privileges, выберите имя в Grantee и отметьте CONNECT. Сохраните изменения.',
+              'Снова откройте Properties → Security. Если PUBLIC отсутствовал при первом открытии, он появится после первого сохранения. В его строке снимите CONNECT, оставив TEMPORARY, если оно уже было выдано. Сохраните.',
               'В свойствах схемы public → Security выдайте пяти ролям USAGE. Оставьте CREATE выключенным. Если CREATE выдан PUBLIC, снимите его в учебной схеме.',
               'Проверьте изменения на вкладке SQL и сохраните настройки.'
             ]
           },
           {
             title: 'Выдаём права на таблицу',
-            screenshots: ['pgRights', 'labPgRights'],
+            screenshots: ['pgRights', 'labPgTableAcl'],
             result: {text: 'После сохранения снова откройте Security. Для client03 в строке прав выбран только SELECT. У всех пяти ролей пустые параметры выдачи прав другим пользователям.'},
             actions: [
               'В public → Tables щёлкните правой кнопкой по clients и откройте Properties → Security.',
@@ -390,10 +423,10 @@ const DATABASE_ROUTES = [
       databaseStep('Проверить права и выгрузить таблицу', 'Проверка доступа и текстовый SQL-файл',
         'Учётная запись client03 должна читать данные. Проверяем её через редактор данных, затем сверяем разрешения.', [
           openClientGrid('В DBeaver создаём отдельное подключение PostgreSQL к 127.0.0.1:5432, база corpdata_07, пользователь client03.',
-            'Schemas → public → Tables → clients'),
+            'corpdata_07 → Schemas → public → Tables → clients'),
           checkDatabaseReader('public.clients', 'SELECT current_user, current_database();',
             'В DBeaver создаём подключение PostgreSQL к 127.0.0.1:5432, база corpdata_07, пользователь client03.',
-            'client03', 'ERROR: permission denied for table clients\nSQLSTATE: 42501', 'labPsql'),
+            'client03', 'ERROR: permission denied for table clients\nSQLSTATE: 42501', ['labPgVerifiedRows', 'labPgDenied']),
           ...clientGridEdits,
           {
             title: 'Выгружаем clients через Backup',
@@ -401,15 +434,13 @@ const DATABASE_ROUTES = [
             actions: [
               'В pgAdmin подключитесь как postgres. Откройте Backup в контекстном меню clients.',
               'Укажите файл clients.sql и формат Plain. Оставьте включёнными структуру и данные. Запустите выгрузку.',
+              'Если выгрузку предстоит импортировать в чистый экземпляр без учебных ролей, на Data Options в группе Do not save включите Owner и Privileges. Матрицу прав сохраните в отчёте.',
               'Если pg_dump не найден, укажите каталог bin установленной версии PostgreSQL в Preferences → Paths → Binary paths и повторите выгрузку.'
             ]
           },
           {
             title: 'Проверяем содержимое выгрузки',
-            result: {files: [
-              ['Открыть SQL-выгрузку PostgreSQL', 'examples/clients.sql'],
-              ['Отчёт о настройке PostgreSQL и Windows', 'examples/database-report.html']
-            ]},
+            result: {table: postgresClientRows, screenshots: ['labPgVerifiedRows']},
             actions: [
               'Откройте clients.sql как текст. Найдите CREATE TABLE и обе строки в секции COPY или командах INSERT.',
               'Добавьте в отчёт снимки проверки client03, а также текст выгрузки или её первые десять строк.'
@@ -421,12 +452,13 @@ const DATABASE_ROUTES = [
   {
     id: 'mysql', title: 'MySQL · Workbench',
     steps: [
-      databaseStep('Подготовить MySQL и Workbench', 'Место 07, MySQL Server и Workbench 8.0',
+      databaseStep('Подготовить MySQL и Workbench', 'Место 07, MySQL Server 8.4 LTS и Workbench',
         'Оба приложения устанавливаем в одной изолированной Windows-ВМ. Учебное подключение идёт по TCP через 127.0.0.1.', [
           {
             title: 'Инициализируем сервер и запускаем службу',
+            links: [['Скачать MySQL, Workbench и JDBC-драйвер', 'examples/learning-preparation.html#mysql']],
             actions: [
-              'В MySQL Installer выберите Server и Workbench.',
+              'Установите MySQL Community Server 8.4 LTS и Workbench из двух отдельных MSI. Откройте MySQL Configurator для настройки сервера.',
               'Задайте свободный порт 3306 и пароль root.',
               'На шаге Windows Service укажите имя службы lab_sql_07 и примените конфигурацию.',
               'В services.msc убедитесь, что служба lab_sql_07 запущена.'
@@ -437,10 +469,11 @@ const DATABASE_ROUTES = [
             screenshots: ['workbenchConnect'],
             actions: [
               'Создайте MySQL Connection с именем lab_sql_07 и методом Standard TCP/IP.',
-              'Укажите 127.0.0.1, порт 3306 и пользователя root. Нажмите Test Connection.',
+              'Укажите 127.0.0.1, порт вашей службы и пользователя root. Нажмите Test Connection. Если Workbench 8.0 предупреждает о версии MySQL 8.4, проверьте адрес и порт учебного сервера, затем нажмите Continue Anyway.',
               'Откройте Administration → Server Status и запишите версию.',
               'Выполните запрос ниже и запишите путь установки, каталог данных и порт.'
             ],
+            codeNote: 'SHOW VARIABLES выводит действующие настройки сервера. Условие IN оставляет каталог установки, каталог данных и номер порта.',
             code: "SHOW VARIABLES WHERE Variable_name IN ('basedir', 'datadir', 'port');"
           }
         ], 'MySQL запущен как служба lab_sql_07. Подключение проверено, порт и пути записаны.'),
@@ -448,6 +481,7 @@ const DATABASE_ROUTES = [
         'В MySQL схема corpdata_07 служит базой данных для задания. Открываем административное подключение root.', [
           {
             title: 'Создаём схему',
+            screenshots: ['labMysqlSchema'],
             result: savedDatabase('corpdata_07'),
             actions: [
               'В панели Schemas выберите Create Schema.',
@@ -457,7 +491,7 @@ const DATABASE_ROUTES = [
           },
           {
             title: 'Создаём clients в редакторе таблиц',
-            screenshots: ['workbenchEditor', 'workbenchTable'],
+            screenshots: ['workbenchEditor', 'labMysqlColumns'],
             result: {
               text: 'В Schemas → corpdata_07 → Tables появляется clients. В административном подключении выполните SHOW CREATE TABLE corpdata_07.clients. В определении id и таблицы должны быть эти строки.',
               output: '`id` int NOT NULL AUTO_INCREMENT,\nPRIMARY KEY (`id`)\n… ENGINE=InnoDB …'
@@ -466,29 +500,33 @@ const DATABASE_ROUTES = [
               'У corpdata_07 → Tables выберите Create Table.',
               'Введите имя clients и выберите движок InnoDB для поддержки транзакций.',
               'Добавьте поля по таблице ниже. У id отметьте PK, NN и AI. У остальных полей отметьте NN.',
+              'Сверьте четыре имени. Если Workbench добавил заготовку clientscol, щёлкните по ней правой кнопкой и выберите Delete Selected до сохранения.',
               'Нажмите Apply. Проверьте AUTO_INCREMENT и PRIMARY KEY в SQL, затем подтвердите изменения.',
               'В новой вкладке SQL выполните команду ниже. Она показывает определение таблицы, которое сохранил сервер.'
             ],
+            codeNote: 'SHOW CREATE TABLE отображает фактическое определение существующей таблицы. В нём можно сверить первичный ключ, автоинкремент и транзакционный движок InnoDB.',
             code: 'SHOW CREATE TABLE corpdata_07.clients;',
             table: clientColumns('PK, NN, AI')
           },
           {
-            title: 'Добавляем данные через сетку',
+            title: 'Добавляем данные в графическом редакторе',
+            screenshots: ['labMysqlForm'],
             result: {table: savedClientRows()},
             actions: [
               'Откройте у clients Select Rows – Limit 1000.',
-              'Введите имя, адрес и дату для обеих записей. Оставьте id пустым.',
-              'Нажмите Apply, проверьте INSERT и подтвердите изменения. Обновите сетку и проверьте id 1 и 2.'
+              'Справа от результатов откройте Form Editor. Нажмите значок Add Row с зелёным плюсом. Введите Name, Email и Reg_date. Оставьте Id пустым.',
+              'Снова нажмите Add Row и введите вторую строку. Нажмите Apply, проверьте две команды INSERT и подтвердите изменения. Вернитесь в Result Grid и обновите строки.'
             ],
             table: clientRows
           },
           {
             title: 'Создаём пять локальных пользователей',
-            screenshots: ['workbenchUsers'],
+            screenshots: ['workbenchUsers', 'labMysqlRoles'],
             actions: [
               'Откройте Administration → Users and Privileges → Add Account.',
               'Укажите Login Name = client01 и Limit to Hosts Matching = 127.0.0.1.',
-              'Задайте пароль от восьми символов с буквами, цифрами и спецсимволами. Оставьте административные роли пустыми и нажмите Apply.',
+              'Укажите пароль от восьми символов с буквами, цифрами и спецсимволами и повторите его в Confirm Password. Оставьте административные роли пустыми.',
+              'Если в Workbench 8.0 появилось Invalid Authentication Plugin, закройте сообщение. В Authentication Type выберите caching_sha2_password. На Account Limits заполните пустые поля значением 0. Затем нажмите Apply.',
               'Повторите для client02–client05 с отдельными паролями.'
             ]
           },
@@ -496,10 +534,11 @@ const DATABASE_ROUTES = [
             title: 'Выдаём права только на clients',
             screenshots: ['workbenchEditor', 'workbenchSqlToolbar'],
             actions: [
-              'В подключении root нажмите SQL+ на верхней панели, чтобы открыть пустую вкладку. Для этого задания права задаём на таблицу corpdata_07.clients через GRANT.',
+              'В подключении root нажмите SQL+ на верхней панели. В Administration → Users and Privileges обычный редактор назначает разрешения всей схеме. Для ограничения прав одной таблицей используйте запросы GRANT.',
               'Вставьте блок ниже. Сверьте имя таблицы и хост 127.0.0.1, затем нажмите первую жёлтую молнию на панели вкладки.',
               'Проверьте Action Output. У каждой команды должен быть успешный результат. На следующем шаге сверьте права через SHOW GRANTS.'
             ],
+            codeNote: 'GRANT назначает перечисленные операции. ON corpdata_07.clients ограничивает права конкретной таблицей, а часть после @ указывает адрес клиента из созданной учётной записи.',
             code: `GRANT SELECT, INSERT ON corpdata_07.clients TO 'client01'@'127.0.0.1', 'client02'@'127.0.0.1';
 GRANT SELECT ON corpdata_07.clients TO 'client03'@'127.0.0.1';
 GRANT SELECT, UPDATE ON corpdata_07.clients TO 'client04'@'127.0.0.1';
@@ -521,27 +560,26 @@ GRANT SELECT, DELETE ON corpdata_07.clients TO 'client05'@'127.0.0.1';`,
               'Под администратором выполните SHOW GRANTS для client03. Найдите GRANT SELECT ON corpdata_07.clients. USAGE ON *.* показывает отсутствие глобальных прав.',
               'Повторите проверку для остальных четырёх учётных записей и сверьте права с таблицей.'
             ],
+            codeNote: 'SHOW GRANTS читает действующие разрешения для пары «имя и хост». У client03 на таблицу должен остаться только SELECT.',
             code: "SHOW GRANTS FOR 'client03'@'127.0.0.1';",
             table: databaseRights
           },
           checkDatabaseReader('corpdata_07.clients', 'SELECT CURRENT_USER(), DATABASE();',
             'В DBeaver создаём подключение MySQL к 127.0.0.1:3306, база corpdata_07, пользователь client03. CURRENT_USER() показывает client03@127.0.0.1.',
-            'client03@127.0.0.1', 'ERROR 1142 (42000): UPDATE command denied …', 'labMySql'),
+            'client03@127.0.0.1', 'ERROR 1142 (42000): UPDATE command denied …', ['labMysqlVerifiedRows', 'labMysqlDenied']),
           ...clientGridEdits,
           {
             title: 'Экспортируем структуру и данные',
             screenshots: ['workbenchExport'],
             result: {
               text: 'В выгрузке есть CREATE TABLE и две исходные строки в INSERT. Для проверки восстановления импортируйте файл в отдельную пустую схему: экспорт может содержать DROP TABLE.',
-              files: [
-                ['Открыть проверенную SQL-выгрузку MySQL', 'examples/clients-mysql.sql'],
-                ['Отчёт о настройке MySQL и Windows', 'examples/database-report-mysql.html']
-              ]
+              table: clientRows
             },
             actions: [
               'В Workbench откройте Server → Data Export и отметьте clients в схеме corpdata_07.',
-              'Выберите Dump Structure and Data и Export to Self-Contained File. Укажите путь к clients.sql.',
-              'Нажмите Start Export. В готовом файле сверьте CREATE TABLE и обе исходные строки в INSERT.'
+              'Выберите Dump Structure and Data и Export to Self-Contained File. Укажите путь к clients.sql в папке M2. Оставьте Include Create Schema выключенным, чтобы файл можно было восстановить в другой пустой базе.',
+              'Нажмите Start Export. Если Workbench запросит пароль, введите пароль учебного администратора. Если появится mysqldump Version Mismatch, в Edit → Preferences → Administration укажите Path to mysqldump Tool из папки bin вашей установки MySQL Server и повторите экспорт.',
+              'В готовом файле сверьте CREATE TABLE и обе исходные строки в INSERT. Если кнопка Start Export не видна, сверните нижнюю панель Output кнопкой в правом верхнем углу.'
             ]
           }
         ], 'Проверка под client03 подтверждена. Для отчёта есть SQL-файл и снимки.')
@@ -554,6 +592,7 @@ GRANT SELECT, DELETE ON corpdata_07.clients TO 'client05'@'127.0.0.1';`,
         'Используем отдельную Windows-ВМ. Для входа в SSMS администратором используем учётную запись Windows.', [
           {
             title: 'Устанавливаем экземпляр и SSMS',
+            links: [['Скачать SQL Server Express, SSMS и JDBC-драйвер', 'examples/learning-preparation.html#sqlserver']],
             screenshots: ['ssmsConnect'],
             actions: [
               'В установщике SQL Server Express выберите Custom → Database Engine Services. Задайте именованный экземпляр LAB_SQL_07.',
@@ -577,6 +616,7 @@ GRANT SELECT, DELETE ON corpdata_07.clients TO 'client05'@'127.0.0.1';`,
               'В свойствах сервера на странице Database Settings найдите пути Data и Log. Каталог экземпляра проверьте в параметрах службы.',
               'Выполните запрос ниже и запишите в отчёт версию, имя службы, пути и порт.'
             ],
+            codeNote: 'SERVERPROPERTY показывает имя и версию экземпляра. CONNECTIONPROPERTY возвращает порт текущего TCP-подключения. При подключении через Shared Memory значение порта будет NULL.',
             code: "SELECT SERVERPROPERTY('InstanceName') AS instance_name,\n       SERVERPROPERTY('ProductVersion') AS version,\n       CONNECTIONPROPERTY('local_tcp_port') AS port;"
           }
         ], 'Подключение по TCP работает. В отчёте указан экземпляр LAB_SQL_07 и фактический порт.'),
@@ -613,6 +653,7 @@ GRANT SELECT, DELETE ON corpdata_07.clients TO 'client05'@'127.0.0.1';`,
               'Введите имя, адрес и дату, оставьте id пустым. Перейдите на следующую строку для сохранения и повторите для второй записи.',
               'В SSMS откройте New Query с выбранной базой corpdata_07. Выполните запрос и сверьте поля и автоматически выданные id.'
             ],
+            codeNote: 'SELECT показывает сохранённые значения в четырёх столбцах. ORDER BY id упорядочивает полученные строки по ключу.',
             code: 'SELECT id, name, email, reg_date FROM dbo.clients ORDER BY id;',
             table: clientRows
           },
@@ -644,7 +685,7 @@ GRANT SELECT, DELETE ON corpdata_07.clients TO 'client05'@'127.0.0.1';`,
             'corpdata_07 → Schemas → dbo → Tables → clients'),
           checkDatabaseReader('dbo.clients', 'SELECT ORIGINAL_LOGIN(), DB_NAME();',
             'Создаём в DBeaver подключение SQL Server к 127.0.0.1, порт 14337, база corpdata_07, SQL Server Authentication, логин client03. При необходимости доверяем сертификату только для этого локального экземпляра.',
-            'client03', "Msg 229: The UPDATE permission was denied on the object 'clients', database 'corpdata_07', schema 'dbo'.", 'labSqlServer'),
+            'client03', "Msg 229: The UPDATE permission was denied on the object 'clients', database 'corpdata_07', schema 'dbo'.", ['labSqlVerifiedRows','labSqlDenied']),
           ...clientGridEdits,
           {
             title: 'Настраиваем мастер выгрузки',
@@ -652,17 +693,14 @@ GRANT SELECT, DELETE ON corpdata_07.clients TO 'client05'@'127.0.0.1';`,
             actions: [
               'У corpdata_07 откройте Tasks → Generate Scripts. На Choose Objects выберите dbo.clients.',
               'На Set Scripting Options выберите Save to file и задайте имя clients.sql.',
-              'В Advanced выберите Types of data to script → Schema and data. Проверьте сводку и завершите мастер.'
+              'В Advanced выберите Types of data to script → Schema and data. Поставьте Script USE DATABASE = False для импорта в другую пустую базу. Проверьте сводку и завершите мастер.'
             ]
           },
           {
             title: 'Сверяем структуру и записи',
             result: {
               text: 'Перед вставкой строк с готовыми id включён IDENTITY_INSERT. После вставки он выключен. В новой пустой базе восстановление даёт id 1 и 2.',
-              files: [
-                ['Открыть пример SQL-файла для SQL Server', 'examples/clients-sqlserver.sql'],
-                ['Отчёт о настройке SQL Server и Windows', 'examples/database-report-sqlserver.html']
-              ]
+              table: clientRows
             },
             actions: [
               'В clients.sql найдите CREATE TABLE для dbo.clients, свойство IDENTITY поля id и обе исходные строки в INSERT.',

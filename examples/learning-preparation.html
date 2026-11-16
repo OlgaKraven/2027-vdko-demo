@@ -12,31 +12,87 @@
 <body>
 <main class="shell">
   <header class="route-heading">
-    <p><a href="../index.html?mode=learn&amp;stage=documents">← К подготовке</a></p>
+    <p><a href="../index.html?mode=learn&amp;module=documents&amp;view=steps">← К подготовке</a></p>
     <h1>0. Установка и настройка программ</h1>
   </header>
   <article class="route-panel">
     <h2>Рабочее место для тренировки</h2>
     <ol>
-      <li>В Windows проверьте, что открываются «Просмотр событий», «Диспетчер задач» и «Безопасность Windows». Для заявки создайте тестовую запись в учебной системе колледжа или попросите доступ к стенду GLPI. Для домашнего просмотра материалов достаточно браузера.</li>
-      <li>Установите офисный пакет, если его ещё нет. На <a href="https://www.libreoffice.org/download/?lang=en-US">странице LibreOffice</a> выберите установщик Windows x86-64. В Writer откройте и сохраните DOCX, в Calc — XLSX. Если на площадке используются Word и Excel или Р7-Офис, тренируйтесь в доступных редакторах.</li>
-      <li>Для задания 2 установите одну из трёх СУБД. Сверьте выбранный маршрут с рабочим местом площадки. Таблицу и записи создайте запросами из задания 2.</li>
+      <li>В Windows откройте «Параметры → Система → О системе» и посмотрите «Тип системы». На обычном 64-разрядном ПК выбирайте Windows x86-64 или x64. Для Windows на ARM сверьте поддержку серверной программы с площадкой.</li>
+      <li>Сохраните установщики и драйверы в отдельной папке до отключения интернета. Проверьте, что запускаются офисные редакторы, графический клиент и локальный сервер выбранной СУБД.</li>
+      <li>Для задания 3 откройте «Просмотр событий», «Диспетчер задач» и «Безопасность Windows» или разрешённый антивирус. Эти средства Windows скачивать отдельно не нужно.</li>
     </ol>
-    <h3 id="database">PostgreSQL и pgAdmin</h3>
-    <p>Скачайте <a href="https://www.postgresql.org/download/windows/">PostgreSQL для Windows</a>. По ссылке Download the installer выберите Windows x86-64. Оставьте PostgreSQL Server, pgAdmin 4 и Command Line Tools. Запишите пароль <code>postgres</code> и порт, обычно 5432. Для задания 2 создайте учебную базу по шагам своего маршрута. Открывайте Query Tool в выбранной базе.</p>
-    <h3>MySQL и Workbench</h3>
-    <p>Скачайте <a href="https://dev.mysql.com/downloads/mysql/8.4.html?os=3">MySQL Server 8.4 LTS MSI для Windows</a> и <a href="https://dev.mysql.com/downloads/workbench/">MySQL Workbench</a>. В MySQL Configurator выберите локальную службу, задайте пароль root и запишите порт, обычно 3306. Подключитесь в Workbench и откройте SQL Editor. Базу создайте по шагам задания 2.</p>
-    <h3>SQL Server и SSMS</h3>
-    <p>Скачайте <a href="https://www.microsoft.com/en-us/download/details.aspx?id=108836">SQL Server Express</a> и установите Database Engine. Запишите имя экземпляра, например <code>SQLEXPRESS</code>. Установите <a href="https://learn.microsoft.com/en-us/ssms/install/install">SSMS</a> и при работе через терминал <a href="https://learn.microsoft.com/en-us/sql/tools/sqlcmd/sqlcmd-download-install">sqlcmd</a>. В SSMS подключитесь к <code>.\SQLEXPRESS</code> через Windows Authentication. Создайте учебную базу по заданию 2 и выберите её в окне запроса.</p>
-    <p>В задании 2 выберите карточку для вашей СУБД. Она задаёт порядок создания таблицы, ввода записей и проверки прав.</p>
+  </article>
+  <article class="route-panel" id="office">
+    <h2>Задание 1. Офисные редакторы и система заявок</h2>
+    <p>Используйте один комплект. Пустая книга должна сохраняться в XLSX или ODS, а документ — в DOCX или ODT.</p>
+    <ul>
+      <li><a href="https://www.libreoffice.org/download/download-libreoffice/">LibreOffice</a>. Нажмите Download, выберите Windows x86-64, скачайте MSI и запустите «Обычная установка». Проверьте запуск Calc и Writer.</li>
+      <li><a href="https://support.microsoft.com/en-us/office/download-and-install-or-reinstall-microsoft-365-or-office-2024-on-a-pc-or-mac-4414eaaf-0478-48be-9c42-23adc4716658">Word и Excel</a>. С выданной учётной записью Microsoft 365 используйте Install apps → Microsoft 365 apps. Загрузите программы и проверьте активацию, пока есть сеть. На компьютере колледжа проверьте, что приложения уже открываются.</li>
+      <li><a href="https://r7-office.ru/download">Р7-Офис</a>. Найдите настольные редакторы для Windows, скачайте установщик нужной разрядности и запустите его. Проверьте редактор таблиц и редактор документов.</li>
+    </ul>
+    <h3>Учебный GLPI</h3>
+    <p>Откройте в браузере адрес учебной системы заявок, который выдал преподаватель, и войдите с учебной учётной записью. Проверьте, что доступны «Поддержка → Заявки → Добавить» и поле категории. Если GLPI работает на сервере колледжа, ПК должен иметь доступ к нему по локальной сети.</p>
+    <p>Для своего локального стенда понадобится Docker Desktop с WSL 2. На странице продукта скачайте вариант Windows AMD64, установите Docker Desktop и запустите движок. Ход развертывания GLPI и получение образов GLPI и MariaDB до отключения сети описаны в официальном руководстве. <a href="https://www.docker.com/products/docker-desktop/">Docker Desktop</a> · <a href="https://help.glpi-project.org/tutorials/fr/procedures/running_glpi_on_docker">GLPI в Docker</a>.</p>
+  </article>
+  <article class="route-panel" id="database">
+    <h2>Задание 2. Сервер и графический редактор</h2>
+    <p>Выберите одну СУБД по оснащению площадки. Таблицу и строки создадите в её графическом редакторе в задании 2. DBeaver нужен для отдельного подключения под учебной учётной записью.</p>
+    <section id="postgresql">
+      <h3>PostgreSQL и pgAdmin</h3>
+      <ol>
+        <li>На <a href="https://www.postgresql.org/download/windows/">странице PostgreSQL для Windows</a> нажмите Download the installer. В таблице EDB выберите PostgreSQL 18 и Windows x86-64. Сохраните EXE.</li>
+        <li>Запустите EXE. Оставьте PostgreSQL Server, pgAdmin 4 и Command Line Tools. Запишите выбранный каталог данных, пароль пользователя <code>postgres</code> и порт. Обычно это 5432. Stack Builder для упражнения не нужен.</li>
+        <li>Откройте pgAdmin 4. При регистрации сервера укажите <code>127.0.0.1</code>, ваш порт, базу <code>postgres</code> и пользователя <code>postgres</code>. Откройте Databases и убедитесь, что подключение работает.</li>
+      </ol>
+      <div class="lesson-screenshots">
+        <figure><a href="../assets/database-screens/download-postgres.png"><img src="../assets/database-screens/download-postgres.png" alt="Windows installers, ссылка Download the installer" loading="lazy"></a><figcaption>PostgreSQL. Ссылка Download the installer в блоке Interactive installer by EDB.</figcaption></figure>
+      </div>
+      <p>Сохраните <code>postgresql-*.jar</code> из раздела Java 8 / JDBC 4.2. Этот файл подходит и для Java, входящей в актуальный DBeaver. <a href="https://jdbc.postgresql.org/download/">Драйвер PostgreSQL JDBC</a>.</p>
+    </section>
+    <section id="mysql">
+      <h3>MySQL и Workbench</h3>
+      <ol>
+        <li>На <a href="https://dev.mysql.com/downloads/mysql/8.4.html?os=3">странице MySQL Community Server 8.4 LTS</a> выберите Microsoft Windows и Windows (x86, 64-bit), MSI Installer. На промежуточном экране нажмите No thanks, just start my download.</li>
+        <li>Отдельно скачайте MSI на <a href="https://dev.mysql.com/downloads/workbench/?os=3">странице MySQL Workbench для Windows</a>. Если установщик просит Microsoft Visual C++ Redistributable, сохраните x64-пакет со страницы Microsoft и установите его первым. <a href="https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist">Microsoft Visual C++ Redistributable</a>.</li>
+        <li>После установки сервера откройте MySQL Configurator. Включите TCP/IP, укажите порт, обычно 3306, задайте пароль <code>root</code> и настройте службу <code>lab_sql_07</code> для места 07. Примените конфигурацию.</li>
+        <li>Установите Workbench. У MySQL Connections нажмите «+», выберите Standard TCP/IP и введите <code>127.0.0.1</code>, свой порт и имя <code>root</code>. Нажмите Test Connection.</li>
+      </ol>
+      <div class="lesson-screenshots">
+        <figure><a href="../assets/database-screens/download-oracle.png"><img src="../assets/database-screens/download-oracle.png" alt="MySQL Server 8.4 LTS, Windows x86-64 MSI" loading="lazy"></a><figcaption>MySQL Server. Загрузите MSI Installer.</figcaption></figure>
+        <figure><a href="../assets/database-screens/download-workbench.png"><img src="../assets/database-screens/download-workbench.png" alt="MySQL Workbench, Windows x86-64 MSI" loading="lazy"></a><figcaption>Workbench. Загрузите отдельный MSI Installer.</figcaption></figure>
+      </div>
+      <p>На странице Connector/J выберите Platform Independent → ZIP Archive. Из ZIP извлеките <code>mysql-connector-j-*.jar</code>. <a href="https://dev.mysql.com/downloads/connector/j/?os=26">Драйвер MySQL Connector/J</a>.</p>
+    </section>
+    <section id="sqlserver">
+      <h3>SQL Server Express и SSMS</h3>
+      <ol>
+        <li>На <a href="https://www.microsoft.com/en-us/sql-server/sql-server-downloads">странице SQL Server</a> найдите Express и нажмите Download now. Чтобы подготовить полный установщик, в загрузчике выберите Download Media, затем пакет Express Core и папку загрузки.</li>
+        <li>Запустите полученный пакет. Выберите New SQL Server stand-alone installation и компонент Database Engine Services. Укажите именованный экземпляр <code>LAB_SQL_07</code> для места 07. На Database Engine Configuration выберите Mixed Mode, добавьте себя в администраторы и задайте пароль <code>sa</code>. Администратор подключается через Windows Authentication, учебные логины используют SQL Server Authentication.</li>
+        <li>На странице <a href="https://learn.microsoft.com/en-us/ssms/install/install">установки SSMS</a> выберите Download SQL Server Management Studio 22 installer. Запустите <code>vs_SSMS.exe</code> и установите базовый компонент SSMS под администратором Windows. Для переноса установки без интернета заранее создайте локальный layout по инструкции Microsoft. <a href="https://learn.microsoft.com/en-us/ssms/install/create-offline">Офлайн-установка SSMS</a>.</li>
+        <li>В SSMS откройте Connect → Database Engine. Укажите <code>.\LAB_SQL_07</code> и Windows Authentication. Порт TCP настройте по первой карточке маршрута SQL Server.</li>
+      </ol>
+      <div class="lesson-screenshots">
+        <figure><a href="../assets/database-screens/download-express.png"><img src="../assets/database-screens/download-express.png" alt="Карточка SQL Server Express и кнопка Download now" loading="lazy"></a><figcaption>SQL Server Express. Кнопка Download now загружает установщик сервера.</figcaption></figure>
+        <figure><a href="../assets/database-screens/download-ssms.png"><img src="../assets/database-screens/download-ssms.png" alt="Ссылка Download SQL Server Management Studio 22 installer" loading="lazy"></a><figcaption>SSMS. Отдельная загрузка графического редактора.</figcaption></figure>
+      </div>
+      <p>Скачайте JDBC Driver ZIP и извлеките из него <code>mssql-jdbc-*.jre11.jar</code>. Этот вариант работает с Java 11 и новее. <a href="https://learn.microsoft.com/en-us/sql/connect/jdbc/download-microsoft-jdbc-driver-for-sql-server">Драйвер Microsoft JDBC</a>.</p>
+    </section>
+  </article>
+  <article class="route-panel" id="dbeaver">
+    <h2>Подключение из DBeaver без интернета</h2>
+    <ol>
+      <li>На <a href="https://dbeaver.io/download/#windows">странице DBeaver Community</a> выберите Windows и EXE или ZIP нужной архитектуры. EXE установите. ZIP распакуйте целиком и откройте <code>dbeaver.exe</code>.</li>
+      <li>В DBeaver откройте Database → Driver Manager. Выберите стандартный драйвер своей СУБД и нажмите Edit → Libraries → Add File. Укажите заранее скачанный JAR.</li>
+      <li>Сохраните лицензию из пакета драйвера рядом с JAR. В учебном профиле замените ссылки Maven с пометкой RELEASE локальным JAR. Если в списке осталась отдельная ссылка HTTPS на текст лицензии и DBeaver пытается её загрузить, сохраните текст заранее и удалите сетевую ссылку из списка. Встроенные записи лицензий оставьте. Нажмите OK.</li>
+      <li>Когда в задании появится учебный пользователь, создайте отдельное соединение. Укажите <code>127.0.0.1</code>, свой порт, базу <code>corpdata_07</code> и заданные имя и пароль. В PostgreSQL выбирайте стандартный драйвер PostgreSQL. Проверьте Test Connection без сети и откройте таблицу clients.</li>
+    </ol>
+    <div class="lesson-screenshots">
+      <figure><a href="../assets/database-screens/download-dbeaver.png"><img src="../assets/database-screens/download-dbeaver.png" alt="DBeaver Community для Windows, варианты EXE и ZIP" loading="lazy"></a><figcaption>Официальная загрузка DBeaver Community для Windows.</figcaption></figure>
+    </div>
   </article>
   <article id="faq" class="route-panel">
-    <h2>ЧаВО об экзамене</h2>
-    <details><summary>Какие задания разобраны?</summary><p>Три инвариантных задания образца КИМ 09.01.05-1-2027 на с. 31–36. Для профильного экзамена состав вариативной части уточните у колледжа.</p></details>
-    <details><summary>Будет ли интернет?</summary><p>На с. 23 КИМ предусмотрен доступ к профильным справочникам и сервисам по белому списку. Уточните его на инструктаже. Для домашней репетиции заранее скачайте материалы и проверьте, что редакторы, локальная база и архив открываются без внешней сети.</p></details>
-    <details><summary>Можно ли взять USB-накопитель или готовый отчёт?</summary><p>Учебный комплект используйте дома. На экзамене работайте с файлами, носителями, учётными записями и ресурсами, которые разрешила площадка. Заранее уточните папку сдачи и допустимые форматы.</p></details>
-    <details><summary>Что делать, если пропал доступ или завис компьютер?</summary><p>Сообщите эксперту номер места, действие и текст ошибки. Дождитесь указаний по продолжению. Требования к работе с оборудованием приведены на с. 24 КИМ.</p></details>
-    <details><summary>Какие подтверждения сохранить?</summary><p>Для реестра сохраните записи и номера карточек, для базы — отчёт и SQL с двумя строками, для диагностики — отчёт со своими снимками или выгрузками. До сдачи откройте сохранённые файлы.</p></details>
+    <p><a href="../index.html?mode=faq">ЧаВО об экзамене</a></p>
   </article>
 </main>
 </body>

@@ -257,7 +257,7 @@ const diagnosticSlides = [
 ];
 
 function databaseSlides(route) {
-  const steps = (route.steps ?? COURSE.tasks.find(task => task.id === 'M2').steps).slice(0, 3);
+  const steps = route.steps;
   const screensShown = new Set();
   const demonstration = steps.flatMap(({example}) => example.points.flatMap(point => {
     const items = point.actions ?? [];
@@ -270,16 +270,21 @@ function databaseSlides(route) {
     });
     const resultTable = result?.table ?? point.table;
     const verification = result?.text ?? example.result;
-    const code = point.code?.split('\n').length <= 8 ? point.code : undefined;
-    const notes = [[example.input, verification].join(' '), point.code].filter(Boolean).join('\n\n');
+    const notes = [[example.input, verification].join(' '), point.codeNote, point.code].filter(Boolean).join('\n\n');
     return [
       {title: point.title, items, text: point.text, notes},
-      ...(resultTable || code || result?.output || result?.text ? [{
+      ...(point.code && point.code.split('\n').length <= 8 ? [{
+        title: point.title + ' · команды',
+        text: point.codeNote,
+        code: point.code,
+        notes: [point.codeNote, verification].filter(Boolean).join('\n\n')
+      }] : []),
+      ...(resultTable || result?.output || result?.text ? [{
         title: point.title + ' · проверка',
         table: resultTable ? [resultTable.columns, ...resultTable.rows] : undefined,
         text: !resultTable && !result?.output ? result?.text : undefined,
-        code: result?.output ?? (resultTable ? undefined : code),
-        notes: verification + (code ? '\n\n' + code : '')
+        code: result?.output,
+        notes: verification
       }] : []),
       ...screenshots.map(screenshot => ({
         title: screenshot.title,

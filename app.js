@@ -3,8 +3,9 @@ const D=COURSE,C=ExamCore,E=C.escape,prefix='2027-vdko-demo:v1:',root=document.g
 let fallback={},storageOK=true;
 const get=(k,v=null)=>{try{return JSON.parse(localStorage.getItem(prefix+k))??v;}catch{storageOK=false;return fallback[k]??v;}};
 const set=(k,v)=>{fallback[k]=v;try{localStorage.setItem(prefix+k,JSON.stringify(v));}catch{storageOK=false;}};
-const modes=[['overview','Обзор'],['learn','Обучение'],['training','Тренировка'],['mock','Пробный экзамен'],['examples','Примеры'],['teacher','Преподавателю']];
+const modes=[['overview','Обзор'],['learn','Обучение'],['training','Тренировка'],['mock','Пробный экзамен'],['examples','Примеры'],['faq','ЧаВО'],['teacher','Преподавателю']];
 const modeIcons = {
+  faq: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4a3.5 3.5 0 0 1 2 6.4c-.8.6-1 1-1 1.6h-2c0-1.5.7-2.4 1.8-3.2A1.5 1.5 0 1 0 10.5 9H8.5A3.5 3.5 0 0 1 12 6Zm-1 10h2v2h-2z',
   overview: 'M12 2.5 2 11h3v9a1 1 0 0 0 1 1h3.5v-6h5v6H18a1 1 0 0 0 1-1v-9h3z',
   learn: 'M6 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm3.5 2h6a4 4 0 0 1 0 8H9a2 2 0 1 0 0 4h7.2l-2-2 1.4-1.4L20 19l-4.4 4.4-1.4-1.4 2-2H9a4 4 0 1 1 0-8h6.5a2 2 0 0 0 0-4h-6z',
   training: 'M9 1h6v3H9zM11 4h2v1h-2zM19 7l1.8-1.8 1.4 1.4-1.8 1.8zM21 14a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-10-5h2v4.5l2.2 2.2-1.4 1.4-2.8-2.8z',
@@ -102,11 +103,10 @@ function fullCondition(entry) {
 function lessonForStage(id) {
   const lesson = D.stages.find(item => item.id===id);
   if (id!=='M2') return lesson;
-  const route = D.databaseRoutes.find(item => item.id===databaseRouteId);
-  if (!route.steps) return {...lesson, route};
-  return {...lesson, route, steps: [...route.steps, lesson.steps.at(-1)]};
+  const route = databaseRouteFor(databaseRouteId);
+  return {...lesson, route, steps: [...route.steps, ...lesson.steps]};
 }
-const progressKey = lesson => lesson.route?.steps ? lesson.id+':'+lesson.route.id : lesson.id;
+const progressKey = lesson => lesson.route ? lesson.id+':'+lesson.route.id : lesson.id;
 const lessonDoneKey = id => id==='M2' ? 'done:M2:'+databaseRouteId : 'done:'+id;
 const lessonDone = id => get(lessonDoneKey(id),false);
 const current=()=>lessonForStage(stage),scope=()=>mode+':'+(mode==='mock'?variant:'sample'),timer=()=>C.restoreTimer(JSON.stringify(get('timer:'+scope())),180*60,mode);
@@ -232,11 +232,10 @@ function lessonBrief(lesson) {
   const points = lesson.steps.flatMap(({example}) => example.points);
   const screenshots = screenshotsForRoute(lesson.route?.id,
     [...new Set(points.flatMap(point => [...(point.screenshots ?? []), ...(point.result?.screenshots ?? [])]))]);
-  const resultFiles = new Map(points.flatMap(point => point.result?.files ?? []).map(file => [file[1], file]));
   return `<div class="lesson-brief">
     ${task ? '<h3>Условие задания</h3>' + taskCondition(task) : `<p>${E(preparation)}</p>
-      <p><a href="examples/learning-preparation.html">0. Установка и настройка программ</a> · <a href="examples/learning-preparation.html#faq">ЧаВО об экзамене</a></p>`}
-    ${lessonMaterials(lesson.id, screenshots, null, [...resultFiles.values()])}
+      <p><a href="examples/learning-preparation.html">0. Установка и настройка программ</a> · <a href="?mode=faq">ЧаВО об экзамене</a></p>`}
+    ${lessonMaterials(lesson.id, screenshots)}
     ${stageResult(lesson)}
     ${btn(get('step:'+progressKey(lesson))===null?'Перейти к шагам и примерам →':stepIndex(lesson)===lesson.steps.length?'Что сохранить →':'Продолжить с шага '+(stepIndex(lesson)+1)+' →','data-lesson-view="steps"',true)}
   </div>`;
@@ -292,11 +291,13 @@ function explain(step, part, route) {
       ${part===0?`<p class="worked-context"><strong>${E(example.title)}</strong><br>${E(example.input)}</p>`:''}
       ${point.text?`<p>${E(point.text)}</p>`:''}
       ${point.actions ? workedActions(point.actions) : ''}
+      ${point.links?.map(([label, path])=>`<p><a href="${E(path)}">${E(label)}</a></p>`).join('') ?? ''}
       ${point.groups?.map(([title, actions])=>`<div class="worked-action-group">
         <h5>${E(title)}</h5>
         ${workedActions(actions)}
       </div>`).join('') ?? ''}
       ${point.code?`<div class="worked-code">
+        ${point.codeNote ? `<p>${E(point.codeNote)}</p>` : ''}
         <div class="worked-code-actions">
           <span role="status"></span>
           ${btn('Копировать код','type="button" id="copy-lesson-code"')}
@@ -311,7 +312,6 @@ function explain(step, part, route) {
         ${point.result.table ? materialTable(point.result.table.columns, point.result.table.rows) : ''}
         ${point.result.output ? `<pre tabindex="0"><code>${E(point.result.output)}</code></pre>` : ''}
         ${lessonScreenshots(route, point.result.screenshots)}
-        ${point.result.files?.map(([label, path, preview]) => previewButton(label, path, preview)).join('') ?? ''}
       </section>` : ''}
       ${lastPart?`<p class="worked-result"><strong>Итог шага.</strong> ${E(example.result)}</p>`:''}
     </section>
@@ -385,7 +385,11 @@ function learn() {
             ${btn('<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>','id="lesson-steps" aria-label="Все шаги" title="Все шаги" aria-haspopup="dialog"')}
           </header>
           ${lessonMaterials(lesson.id, [], point?.materials ?? [])}
-          ${step?explain(step,part,lesson.route?.id):`<div class="lesson-result">${stageResult(lesson)}</div>`}
+          ${step?explain(step,part,lesson.route?.id):`<div class="lesson-result">
+            ${stageResult(lesson)}
+            ${lesson.finalResult ? materialTable(lesson.finalResult.columns, lesson.finalResult.rows) : ''}
+            ${lessonScreenshots(lesson.route?.id, lesson.finalResult?.screenshots)}
+          </div>`}
           <div class="study-controls${step?'':' lesson-result-controls'}">
             ${index>0?stepArrow(index-1,true,'Предыдущая карточка'):''}
             ${step?stepArrow(index+1,false,index+1===cards.length-1?lessonResultTitle:'Следующая карточка'):`
@@ -556,6 +560,36 @@ function criteria() {
   </section>`;
 }
 
+function faq() {
+  const groups = [
+    ['Об экзамене', [
+      ['Какие задания разобраны?', 'Три инвариантных задания образца КИМ 09.01.05-1-2027 на с. 31–36. Состав вариативной части профильного экзамена уточните у колледжа.'],
+      ['Будет ли интернет?', 'На с. 23 КИМ предусмотрен доступ к профильным справочникам и сервисам по белому списку. Уточните список на инструктаже. Для домашней репетиции заранее скачайте материалы и проверьте запуск редакторов и локальной базы без интернета.'],
+      ['Можно ли принести накопитель или готовый отчёт?', 'Используйте только материалы, устройства и ресурсы, разрешённые площадкой. Папку сдачи и форматы файлов уточните на инструктаже.'],
+      ['Что делать, если пропал доступ или завис компьютер?', 'Сообщите эксперту номер рабочего места, последнее действие и текст ошибки. Дождитесь указаний по продолжению.']
+    ]],
+    ['Задание 1. Обращения пользователей', [
+      ['Что связывает запись в реестре и карточку в системе заявок?', 'В каждой строке реестра сохраните исходный номер обращения и внесите отдельным полем номер созданной карточки GLPI. По нему эксперт сможет найти карточку.'],
+      ['Как проверить комплект документов?', 'Откройте реестр и сверьте десять обращений с исходными данными. Проверьте пять ответов и две технологические карты. Каждую карту начните с новой страницы.']
+    ]],
+    ['Задание 2. Базы данных и системное администрирование', [
+      ['Какую СУБД выбрать для тренировки?', 'Пройдите маршрут для той СУБД, которая есть на вашей площадке: PostgreSQL, MySQL или SQL Server. Матрица прав одинакова, а названия команд меню и формат выгрузки зависят от СУБД.'],
+      ['Что должно остаться после проверки доступа?', 'Сохраните снимок отдельного подключения под учебной учётной записью, результат проверки её операций и выгрузку SQL со структурой и обеими исходными строками. В отчёте добавьте сведения о настройке ОС.']
+    ]],
+    ['Задание 3. Диагностика компьютера', [
+      ['Что делать, если за 48 часов найдено меньше трёх ошибок?', 'Сохраните снимок выбранного периода и уровней событий и запишите фактическое число ошибок. При выполнении экзамена сообщите об этом эксперту.'],
+      ['Как подтвердить выводы отчёта?', 'Для каждого вывода укажите конкретное событие, запись автозагрузки, результат сканирования или замер ресурсов. Сохраните собственные снимки экрана либо выгрузки и откройте их перед сдачей.']
+    ]]
+  ];
+  return `<section class="training-page">
+    ${header('ЧаВО')}
+    ${groups.map(([title, items])=>`<article class="route-panel">
+      <h2>${E(title)}</h2>
+      ${items.map(([question,answer])=>`<h3>${E(question)}</h3><p>${E(answer)}</p>`).join('')}
+    </article>`).join('')}
+  </section>`;
+}
+
 function teacher() {
   return `<section class="training-page">
     ${header('Преподавателю','Разбор учебного варианта «Универсальный» для занятия.')}
@@ -596,18 +630,15 @@ function stageMaterials(stageId) {
   return files;
 }
 
-function lessonMaterials(stageId, screenshots = [], materialIds = null, resultFiles = []) {
-  if (materialIds?.length === 0 && !screenshots.length && !resultFiles.length) return '';
+function lessonMaterials(stageId, screenshots = [], materialIds = null) {
+  if (materialIds?.length === 0 && !screenshots.length) return '';
   const files = stageMaterials(stageId).filter(file=>materialIds===null || materialIds.includes(file.id));
-  if (!files.length && !screenshots.length && !resultFiles.length) return '';
+  if (!files.length && !screenshots.length) return '';
   return `<section class="lesson-files" data-lesson-materials="${E(stageId)}" aria-labelledby="lesson-materials">
     <h4 id="lesson-materials">Материалы задания</h4>
     <ul>
       ${files.map(file=>`<li>
         <a href="${E(file.path || '#lesson-materials')}" data-lesson-material="${E(file.id)}" aria-haspopup="dialog">${E(file.name)}</a>
-      </li>`).join('')}
-      ${resultFiles.map(([label, path, preview = path])=>`<li>
-        <button type="button" class="btn" data-material-path="${E(path)}" data-material-preview="${E(preview)}" aria-haspopup="dialog">${E(label)}</button>
       </li>`).join('')}
       ${screenshots.map(key=>{
         const shot = D.screenshots[key];
@@ -797,7 +828,7 @@ function render() {
     const anchor = mode==='overview' && ['#variative','#criteria'].includes(location.hash) ? location.hash : '';
     history.replaceState(null,'','?'+url+anchor);
   }
-  const views = {overview,learn,training:practice,mock:practice,examples,criteria,teacher};
+  const views = {overview,learn,training:practice,mock:practice,examples,criteria,faq,teacher};
   root.innerHTML = `<div class="shell">
     <header class="top">
       <a class="brand" href="?mode=overview"><span class="brand-emblem">ДЭ</span><span><strong>09.01.05 · Оператор технической поддержки</strong><small>Демонстрационный экзамен · 2027</small></span></a>
