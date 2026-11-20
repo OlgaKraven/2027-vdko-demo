@@ -126,13 +126,13 @@ function overview() {
     <div class="banner-copy">
       <h1>Демонстрационный экзамен</h1>
       <ul class="banner-facts" aria-label="Параметры экзамена">
-        <li>Профильный уровень</li><li><span>Рекомендуемое время</span> <time datetime="PT4H">4 часа</time></li><li>До 100 баллов</li>
+        <li>Инвариантная часть</li><li><span>Рекомендуемое время</span> <time datetime="PT3H">3 часа</time></li><li>До 75 баллов</li>
       </ul>
       <p class="lead">Разберите обращения пользователей, разверните сервер баз данных и проведите диагностику компьютера.</p>
       <div class="button-row">${btn('Открыть маршрут обучения →','data-mode="learn"',true)}${materialsButton()}</div>
     </div>
     <div class="banner-mascot"><img src="mascot-exam.png" width="680" height="680" alt="Носорог-студент готовится к демоэкзамену"></div>
-  </section><section class="route-panel" id="variative" aria-labelledby="variative-title"><h2 id="variative-title">Вариативная часть</h2><p>На профильном уровне КИМ включает инвариантную и вариативную части. Вариативное задание определяет образовательная организация, за него можно получить до 25 баллов. На сайте разобраны три задания инвариантной части.</p></section>${criteria()}`;
+  </section>${criteria()}`;
 }
 const shortStages = ['Старт', 'Заявки', 'Сервер', 'Диагностика'];
 function stageNavigation(items, active, practice = false) {
@@ -563,7 +563,7 @@ function criteria() {
 function faq() {
   const groups = [
     ['Об экзамене', [
-      ['Какие задания разобраны?', 'Три инвариантных задания образца КИМ 09.01.05-1-2027 на с. 31–36. Состав вариативной части профильного экзамена уточните у колледжа.'],
+      ['Какие задания разобраны?', 'Три инвариантных задания образца КИМ 09.01.05-1-2027 на с. 31–36.'],
       ['Будет ли интернет?', 'На с. 23 КИМ предусмотрен доступ к профильным справочникам и сервисам по белому списку. Уточните список на инструктаже. Для домашней репетиции заранее скачайте материалы и проверьте запуск редакторов и локальной базы без интернета.'],
       ['Можно ли принести накопитель или готовый отчёт?', 'Используйте только материалы, устройства и ресурсы, разрешённые площадкой. Папку сдачи и форматы файлов уточните на инструктаже.'],
       ['Что делать, если пропал доступ или завис компьютер?', 'Сообщите эксперту номер рабочего места, последнее действие и текст ошибки. Дождитесь указаний по продолжению.']
@@ -825,7 +825,7 @@ function render() {
   if (location.protocol==='file:') {
     history.replaceState(null,'','#'+url);
   } else {
-    const anchor = mode==='overview' && ['#variative','#criteria'].includes(location.hash) ? location.hash : '';
+    const anchor = mode==='overview' && location.hash==='#criteria' ? location.hash : '';
     history.replaceState(null,'','?'+url+anchor);
   }
   const views = {overview,learn,training:practice,mock:practice,examples,criteria,faq,teacher};
